@@ -78,6 +78,7 @@ class ModelData(ABC):
         model = mm.new(cls.name)
         for i in cls.fields:
             field = mm.newField(i)
+            field["rtl"] = True
             mm.addField(model, field)
         for template in cls.templates:
             t = template.to_template()
@@ -144,62 +145,21 @@ class ModelData(ABC):
         return current_version == cls.version
 
 
-def upgrade_onethreeoh(mod):
-    "Upgrade LPCG model from unversioned to version 1.3.0."
-    mm = aqt.mw.col.models
-    field = mm.newField("Prompt")
-    mm.addField(mod, field)
-
-    if '.nightMode .cloze' not in mod['css']:
-        mod['css'] += "\n\n"
-        mod['css'] += dedent("""
-            .nightMode .cloze {
-                filter: invert(85%);
-            }
-            """).strip()
-    mod['css'] = mod['css'].replace('margin-left: -30px;', '')
-
-    assert len(mod['tmpls']) == 1, "LPCG note type has extra templates!"
-    mod['tmpls'][0]['qfmt'] = mod['tmpls'][0]['qfmt'].replace(
-        '<span class="cloze">[...]</span>',
-        dedent('''
-            <div class="cloze">
-                {{#Prompt}}{{Prompt}}{{/Prompt}}
-                {{^Prompt}}[...]{{/Prompt}}
-            </div>
-        ''').strip()
-    )
-    mod['tmpls'][0]['afmt'] = mod['tmpls'][0]['afmt'].replace(
-        '<span class="cloze">{{Line}}</span>',
-        '<div class="cloze">{{Line}}</div>'
-    )
-
-
 class LpcgOne(ModelData):
     class LpcgOneTemplate(TemplateData):
         name = "LPCG1"
         front = """
-            <div class="title">{{Title}} {{Sequence}}</div>
-
-            <br>
-
-            <div class="lines">
-                {{Context}}
-                <div class="cloze">
-                    {{#Prompt}}{{Prompt}}{{/Prompt}}
-                    {{^Prompt}}[...]{{/Prompt}}
-                </div>
+            <div class="title">{{Title}}: {{Sequence}}</div>
+            <div class="lines  alert">{{Context}}</div>
+            <div class="cloze alert">
+                {{#Prompt}}{{Prompt}}{{/Prompt}}
+                {{^Prompt}}[...]{{/Prompt}}
             </div>
         """
         back = """
             <div class="title">{{Title}} {{Sequence}}</div>
-
-            <br>
-
-            <div class="lines">
-                {{Context}}
-                <div class="cloze">{{Line}}</div>
-            </div>
+            <div class="lines alert">{{Context}}</div>
+            <div class="cloze alert">{{Line}}</div>
         """
 
     name = "LPCG 1.0"
@@ -207,48 +167,82 @@ class LpcgOne(ModelData):
     templates = (LpcgOneTemplate,)
     styling = """
         .card {
-            font-family: arial;
-            font-size: 20px;
-            color: black;
-            background-color: white;
+            font-family: MyFont, sans-serif;
+            font-size: 23px; /*هذا الرقم خاص بتغيير حجم الخط*/
+            max-width: 620px;
+            background-color: #fffff9;
+            direction: rtl;
+            margin: 5px auto;
+            text-align: center; /*لتوسيط النصوص غير الكلمة بعد النقطتين إلى justify*/
+            padding: 0 5px;
+            line-height: 1.8em;
         }
 
-        p {
-            margin-top: 0px;
-            margin-bottom: 0px;
+        .card.nightMode {
+            background: #555;
+            color:#eee;
         }
 
-        .lines {
-            text-align: left;
-            margin-left: 30px;
-            text-indent: -30px;
-            margin-right: 30px;
+        .alert {
+            position: relative;
+            padding: 15px;
+            margin-bottom:5px;
+            border-radius: .25rem;
+        }
+
+        .lines  {
+            color: #004085;
+            background: #cce5ff;
+        }
+
+        .nightMode .lines {
+            background: #476d7c;
+            color: #fff;
         }
 
         .cloze {
-            font-weight: bold;
-            color: blue;
+            color: #155724;
+            background: #d4edda;
         }
 
         .nightMode .cloze {
-            filter: invert(85%);
+            background: #254b62;
+            color: #fff;
         }
 
         .title {
-            text-align: center;
-            font-size: small;
+            font-size: 18px;
+            margin: 2px auto 10px;
+            background: #ddd;
+            width: max-content;
+            padding: 0 8%;
+            border-radius: .25rem;
         }
 
-        .indent {
-            margin-left: 60px;
+        .nightMode .title {
+            background: #414141;
+            color: #fff;
         }
+
+        @font-face {
+            font-family: MyFont;
+            font-weight: 500;
+            src: url('_Sh_LoutsSh.ttf');
+        }
+
+        @font-face {
+            font-family: MyFont;
+            font-weight: 700;
+            src: url('_Sh_LoutsShB.ttf');
+        }
+        /*Start of style added by resize image add-on. Don't edit directly or the edition will be lost. Edit via the add-on configuration */
+        .mobile .card img {height:unset  !important; width:unset  !important;}
+        /*End of style added by resize image add-on*/
     """
     sort_field = "Sequence"
     is_cloze = False
-    version = "1.3.0"
-    upgrades = (
-        ("none", "1.3.0", upgrade_onethreeoh),
-    )
+    version = "1.0.0"
+    upgrades = tuple()
 
 
 def ensure_note_type() -> None:
