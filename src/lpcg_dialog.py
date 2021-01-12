@@ -62,11 +62,12 @@ class LPCGDialog(QDialog):
         context_lines = self.form.contextLinesSpin.value()
         recite_lines = self.form.reciteLinesSpin.value()
         group_lines = self.form.groupLinesSpin.value()
+        step = self.form.StepSpin.value()
         did = self.deckChooser.selectedId()
 
         try:
             notes_generated = add_notes(self.mw.col, Note, title, tags, text, did,
-                                        context_lines, group_lines, recite_lines)
+                                        context_lines, group_lines, recite_lines, step)
         except KeyError as e:
             showWarning(
                 "The field {field} was not found on the {name} note type"

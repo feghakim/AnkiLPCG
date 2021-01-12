@@ -244,7 +244,7 @@ def cleanse_text(string: str, config: Dict[str, Any]) -> List[str]:
 
 def add_notes(col: Any, note_constructor: Callable,
               title: str, tags: List[str], text: List[str], deck_id: int,
-              context_lines: int, group_lines: int, recite_lines: int):
+              context_lines: int, group_lines: int, recite_lines: int, step: int = 1):
     """
     Generate notes from the given title, tags, poem text, and number of
     lines of context. Return the number of notes added.
@@ -256,7 +256,7 @@ def add_notes(col: Any, note_constructor: Callable,
     caller should offer an appropriate error message in this case.
     """
     added = 0
-    for line in _poemlines_from_textlines(text, group_lines):
+    for line in _poemlines_from_textlines(text, group_lines)[0::step]:
         n = note_constructor(col, col.models.byName("LPCG 1.0"))
         line.populate_note(n, title, tags, context_lines, recite_lines, deck_id)
         col.addNote(n)
