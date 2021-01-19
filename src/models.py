@@ -147,9 +147,10 @@ class ModelData(ABC):
 
 class LpcgOne(ModelData):
     class LpcgOneTemplate(TemplateData):
-        name = "LPCG1"
+        name = "ARLPCG1"
         front = """
             <div class="title">{{Title}}: {{Sequence}}</div>
+            <div class="title">{{Subtitle}}</div>
             <div class="lines  alert">{{Context}}</div>
             <div class="cloze alert">
                 {{#Prompt}}{{Prompt}}{{/Prompt}}
@@ -158,12 +159,13 @@ class LpcgOne(ModelData):
         """
         back = """
             <div class="title">{{Title}} {{Sequence}}</div>
+            <div class="title">{{Subtitle}}</div>
             <div class="lines alert">{{Context}}</div>
             <div class="cloze alert">{{Line}}</div>
         """
 
-    name = "LPCG 1.0"
-    fields = ("Line", "Context", "Title", "Sequence", "Prompt")
+    name = "ARLPCG 1.0"
+    fields = ("Line", "Context", "Title", "Subtitle", "Sequence", "Prompt")
     templates = (LpcgOneTemplate,)
     styling = """
         .card {

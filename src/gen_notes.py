@@ -11,6 +11,7 @@ class PoemLine:
         self.predecessor = self  # so it's the right type...
         self.successor: Optional['PoemLine'] = None
         self.seq = -1
+        self.subtitle = ''
 
     def populate_note(self, note: 'Note', title: str, tags: List[str],
                       context_lines: int, recite_lines: int, deck_id: int) -> None:
@@ -20,6 +21,7 @@ class PoemLine:
         note.model()['did'] = deck_id  # type: ignore
         note.tags = tags
         note['Title'] = title
+        note['Subtitle'] = self.subtitle
         note['Sequence'] = str(self.seq)
         note['Context'] = self._format_context(context_lines)
         note['Line'] = self._format_text(recite_lines)
@@ -91,11 +93,12 @@ class SingleLine(PoemLine):
     predecessor (possibly the Beginning node, but never None), and if it's
     not the last line of the poem, a successor.
     """
-    def __init__(self, text: str, predecessor: 'PoemLine') -> None:
+    def __init__(self, text: str, predecessor: 'PoemLine', subtitle: Optional[str]) -> None:
         super().__init__()
         self.text = text
         self.predecessor = predecessor
         self.seq = self.predecessor.seq + 1
+        self.subtitle = subtitle
 
     def _get_context(self, lines: int, recursing=False) -> List[str]:
         if lines == 0:
@@ -187,9 +190,14 @@ def _poemlines_from_textlines(config: Dict[str, Any], text_lines: List[str], gro
     pred: PoemLine = beginning
     poem_line: PoemLine
 
+    subtitle = ''
     if group_lines == 1:
         for text_line in text_lines:
-            poem_line = SingleLine(text_line, pred)
+            if text_line.startswith("##"):
+                subtitle = text_line[2:]
+                continue
+            poem_line = SingleLine(text_line, pred, subtitle)
+            subtitle = ''
             lines.append(poem_line)
             pred.successor = poem_line
             pred = poem_line
@@ -225,8 +233,8 @@ def cleanse_text(string: str, config: Dict[str, Any]) -> List[str]:
     # record a level of indentation if appropriate
     text = [re.sub(r'^[ \t]+', r'<indent>', i) for i in text]
     # remove comments and normalize blank lines
-    text = [i.strip() for i in text if not i.startswith("#")]
-    text = [re.sub(r'\s*\#.*$', '', i) for i in text]
+    text = [i.strip() for i in text if not i.startswith("#") or i.startswith("##")]
+    text = [re.sub(r'^\s*#[^#]+$', '', i) for i in text]
     text = _normalize_blank_lines(text)
     # add end-of-stanza/poem markers where appropriate
     for i in range(len(text)):
@@ -257,7 +265,7 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
     """
     added = 0
     for line in _poemlines_from_textlines(config, text, group_lines)[0::step]:
-        n = note_constructor(col, col.models.byName("LPCG 1.0"))
+        n = note_constructor(col, col.models.byName("ARLPCG 1.0"))
         line.populate_note(n, title, tags, context_lines, recite_lines, deck_id)
         col.addNote(n)
         added += 1

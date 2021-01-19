@@ -33,7 +33,7 @@ if 'pytest' not in sys.modules:
 
     if aqt.mw is not None:
         action = QAction(aqt.mw)
-        action.setText("استيراد الأشعار")
+        action.setText("استيراد المنظومات والقصائد")
         aqt.mw.form.menuTools.addAction(action)
         action.triggered.connect(open_dialog)
 
