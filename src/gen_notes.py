@@ -63,10 +63,10 @@ class Beginning(PoemLine):
     it can polymorphically have its context and sequence retrieved.
     Attempting to do anything else with the node is an error.
     """
-    def __init__(self):
+    def __init__(self, text):
         super().__init__()
         self.seq = 0
-        self.text = "[البداية]"
+        self.text = text
 
     def _get_context(self, _lines: int, _recursing=False) -> List[str]:
         return [self.text]
@@ -176,13 +176,13 @@ def groups_of_n(iterable: Iterable, n: int) -> Iterable:
     return zip_longest(*[iter(iterable)]*n)
 
 
-def _poemlines_from_textlines(text_lines: List[str], group_lines: int) -> List[PoemLine]:
+def _poemlines_from_textlines(config: Dict[str, Any], text_lines: List[str], group_lines: int) -> List[PoemLine]:
     """
     Given a list of cleansed text lines, create a list of PoemLine objects
     from it. These are each capable of constructing a correct note testing
     themselves when the to_note() method is called on them.
     """
-    beginning = Beginning()
+    beginning = Beginning(config.get("beginningLine", "[البداية]"))
     lines: List[PoemLine] = []  # does not include beginning, as it's not actually a line
     pred: PoemLine = beginning
     poem_line: PoemLine
@@ -242,7 +242,7 @@ def cleanse_text(string: str, config: Dict[str, Any]) -> List[str]:
     return text
 
 
-def add_notes(col: Any, note_constructor: Callable,
+def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
               title: str, tags: List[str], text: List[str], deck_id: int,
               context_lines: int, group_lines: int, recite_lines: int, step: int = 1):
     """
@@ -256,7 +256,7 @@ def add_notes(col: Any, note_constructor: Callable,
     caller should offer an appropriate error message in this case.
     """
     added = 0
-    for line in _poemlines_from_textlines(text, group_lines)[0::step]:
+    for line in _poemlines_from_textlines(config, text, group_lines)[0::step]:
         n = note_constructor(col, col.models.byName("LPCG 1.0"))
         line.populate_note(n, title, tags, context_lines, recite_lines, deck_id)
         col.addNote(n)
