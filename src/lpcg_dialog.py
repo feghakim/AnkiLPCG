@@ -2,8 +2,8 @@ import codecs
 
 # pylint: disable=no-name-in-module
 from PyQt5.QtWidgets import QDialog
-from PyQt5.QtGui import QDesktopServices
-from PyQt5.QtCore import QUrl
+from PyQt5.QtGui import QDesktopServices, QTextOption
+from PyQt5.QtCore import QUrl, Qt
 
 import aqt
 from aqt.qt import QAction  # type: ignore
@@ -38,22 +38,25 @@ class LPCGDialog(QDialog):
         self.form.openFileButton.clicked.connect(self.onOpenFile)
         self.form.helpButton.clicked.connect(self.onHelp)
 
+        self.setLayoutDirection(Qt.RightToLeft)
+        self.form.textBox.document().setDefaultTextOption(QTextOption(Qt.AlignRight))
+
     def accept(self):
         "On close, create notes from the contents of the poem editor."
         title = self.form.titleBox.text().strip()
 
         if not title:
-            showWarning("You must enter a title for this poem.")
+            showWarning("يجب أن تدخل عنوانًا لهذه القصيدة.")
             return
         if self.mw.col.findNotes(f'"note:{models.LpcgOne.name}" "Title:{title}"'):  # pylint: disable=no-member
-            showWarning("You already have a poem by that title in your "
-                        "database. Please check to see if you've already "
-                        "added it, or use a different name.")
+            showWarning("لديك بالفعل قصيدة بهذا العنوان في قاعدة البيانات. "
+                        "الرجاء التحقق مما إذا كنت بالفعل قد أضفتها، أو "
+                        "استخدام اسم مختلف.")
             return
         if not self.form.textBox.toPlainText().strip():
-            showWarning("There's nothing to generate cards from! "
-                        "Please type a poem in the box, or use the "
-                        '"Open File" button to import a text file.')
+            showWarning("لا يوجد شيء لتوليد البطاقات! "
+                        "اكتب قصيدة في الصندوق النصي، أو "
+                        'استخدم زر "فتح ملف" لاستيراد ملف نصي.')
             return
 
         tags = self.mw.col.tags.split(self.form.tagsBox.text())
@@ -70,11 +73,10 @@ class LPCGDialog(QDialog):
                                         context_lines, group_lines, recite_lines, step)
         except KeyError as e:
             showWarning(
-                "The field {field} was not found on the {name} note type"
-                " in your collection. If you don't have any LPCG notes"
-                " yet, you can delete the note type in Tools -> Manage"
-                " Note Types and restart Anki to fix this problem."
-                " Otherwise, please add the field back to the note type. "
+                "تعذر إيجاد حقل {field} في نوع ملحوظة {name} في مجموعتك. "
+                "إذا لم يكن لديك أي ملحوظات ARLPCG بعد، تستطيع حذف "
+                "نوع الملحوظة من خلال أدوات > إدارة أنواع الملحوظات وإعادة تشغيل "
+                "أنكي لحل المشكلة. أو أضف الحقل إلى نوع الملحوظة."
                 .format(field=str(e), name=models.LpcgOne.name))  # pylint: disable=no-member
             return
 
@@ -89,8 +91,8 @@ class LPCGDialog(QDialog):
         poem editor with the contents of the file.
         """
         if (self.form.textBox.toPlainText().strip()
-                and not askUser("Importing a file will replace the current "
-                                "contents of the poem editor. Continue?")):
+                and not askUser("سيؤدي استيراد ملف إلى استبدال المحتوى الحالي لمحرر الأشعار. "
+                                "هل تريد الاستمرار؟")):
             return
         filename = getFile(self, "Import file", None, key="import")
         if not filename: # canceled

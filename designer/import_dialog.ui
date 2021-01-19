@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>LPCG – Import Lyrics/Poetry</string>
+   <string>ARLPCG – مستورد الأشعار</string>
   </property>
   <property name="sizeGripEnabled">
    <bool>true</bool>
@@ -25,7 +25,7 @@
      <item row="2" column="0">
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>&amp;Title</string>
+        <string>&amp;العنوان</string>
        </property>
        <property name="buddy">
         <cstring>titleBox</cstring>
@@ -42,7 +42,7 @@
      <item row="4" column="0">
       <widget class="QLabel" name="label_3">
        <property name="text">
-        <string>Ta&amp;gs</string>
+        <string>الس&amp;مات</string>
        </property>
        <property name="buddy">
         <cstring>tagsBox</cstring>
@@ -55,7 +55,7 @@
      <item row="6" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Lines of Conte&amp;xt</string>
+        <string>السطور الم&amp;جاورة</string>
        </property>
        <property name="buddy">
         <cstring>contextLinesSpin</cstring>
@@ -71,7 +71,7 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>Number of context lines to show on the question side of the cards.</string>
+        <string>عدد السطور المجاورة التي ستظهر في جانب السؤال من كل بطاقة</string>
        </property>
        <property name="minimum">
         <number>1</number>
@@ -87,7 +87,7 @@
      <item row="7" column="0">
       <widget class="QLabel" name="label_5">
        <property name="text">
-        <string>Lines to &amp;Recite</string>
+        <string>السطور المراد حفظها</string>
        </property>
        <property name="buddy">
         <cstring>reciteLinesSpin</cstring>
@@ -97,7 +97,7 @@
      <item row="7" column="1">
       <widget class="QSpinBox" name="reciteLinesSpin">
        <property name="toolTip">
-        <string>Number of occluded lines shown on the answer side of each card.</string>
+        <string>عدد السطور المتعتّمة المعروضة في جانب السؤال من كل بطاقة</string>
        </property>
        <property name="minimum">
         <number>1</number>
@@ -110,7 +110,7 @@
      <item row="8" column="0">
       <widget class="QLabel" name="label_4">
        <property name="text">
-        <string>Lines in Gro&amp;ups of</string>
+        <string>مجموعات س&amp;طور مكونة من</string>
        </property>
        <property name="buddy">
         <cstring>groupLinesSpin</cstring>
@@ -130,7 +130,7 @@
      <item row="9" column="0">
       <widget class="QLabel" name="label_7">
        <property name="text">
-        <string>Step</string>
+        <string>الفاصل</string>
        </property>
       </widget>
      </item>
@@ -146,7 +146,7 @@
    <item>
     <widget class="QLabel" name="label_6">
      <property name="text">
-      <string>&amp;Poem:</string>
+      <string>&amp;القصيدة:</string>
      </property>
      <property name="buddy">
       <cstring>textBox</cstring>
@@ -161,17 +161,17 @@
      <item>
       <widget class="QPushButton" name="helpButton">
        <property name="text">
-        <string>&amp;Help</string>
+        <string>&amp;مساعدة</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="openFileButton">
        <property name="toolTip">
-        <string>Replace the contents of the poem editor with a text file on your computer.</string>
+        <string>يستبدل محتوى محرر الأشعار بمحتوى ملف نصي على حاسوبك.</string>
        </property>
        <property name="text">
-        <string>&amp;Open file</string>
+        <string>&amp;فتح ملف</string>
        </property>
        <property name="autoDefault">
         <bool>false</bool>
@@ -197,10 +197,10 @@
      <item>
       <widget class="QPushButton" name="addCardsButton">
        <property name="toolTip">
-        <string>Generate notes from the text in the poem editor.</string>
+        <string>يولد ملحوظات من النص في محرر الأشعار</string>
        </property>
        <property name="text">
-        <string>&amp;Add notes</string>
+        <string>&amp;إضافة ملحوظات</string>
        </property>
        <property name="autoDefault">
         <bool>false</bool>
@@ -216,7 +216,7 @@
      <item>
       <widget class="QPushButton" name="cancelButton">
        <property name="text">
-        <string>&amp;Cancel</string>
+        <string>&amp;إلغاء</string>
        </property>
        <property name="autoDefault">
         <bool>false</bool>

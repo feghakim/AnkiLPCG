@@ -261,21 +261,21 @@ def ensure_note_type() -> None:
     # "none": the "version number" pre-versioning
     current_version = aqt.mw.col.get_config('lpcg_model_version', default="none")
     if mod.can_upgrade(current_version):
-        r = askUser("In order to import new notes in this version of LPCG, "
-                    "your LPCG note type needs to be upgraded. "
-                    "This may require a full sync of your collection upon completion. "
-                    "Would you like to upgrade the note type now? "
-                    "If you say no, you will be asked again next time you start Anki.")
+        r = askUser("لاستيراد ملحوظات جديدة في إصدار ARLPCG هذا،"
+                    "يجب تحديث نوع ملحوظات ARLPCG الخاص بك. "
+                    "قد يتطلب هذا مزامنة كاملة لمجموعتك بعد الاكتمال. "
+                    "هل تريد تحديث نوع الملحوظة الآن؟ "
+                    "إذا لم توافق، ستُسأل عندما تشغل أنكي المرة القادمة.")
         if r:
             new_version = mod.upgrade_from(current_version)
             aqt.mw.col.set_config('lpcg_model_version', new_version)
-            showInfo("Your LPCG note type was upgraded successfully. "
-                    "Please take a moment to ensure your LPCG cards "
-                    "are still displaying as expected so you can restore from a backup "
-                    "in the event something is not working correctly.")
+            showInfo("تم تحديث نوع ملحوظة ARLPCG الخاص بك بنجاح. "
+                    "يرجى التأكد من أنك بطاقات ARLPCG الخاصة بك "
+                    "تظهر بشكل صحيح لكي تستطيع الاسترجاع من نسخة احتياطية "
+                    "في حال كان هناك خطب ما.")
         return
 
     assert mod.is_at_version(aqt.mw.col.get_config('lpcg_model_version')), \
-        "Your LPCG model is out of date, but I couldn't find a valid upgrade path. " \
-        "You are likely to encounter issues. " \
-        "Please contact the developer for assistance resolving this problem."
+        "نوع ملحوظات ARLPCG الخاص بك قديم، لكنني لم أعثر على طريقة تحديث صالحة. " \
+        "من المرجح أن تصادف مشاكل. " \
+        "الرجاء التواصل مع المطور أو طلب الدعم لحل هذه المشكلة."

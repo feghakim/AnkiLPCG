@@ -66,7 +66,7 @@ class Beginning(PoemLine):
     def __init__(self):
         super().__init__()
         self.seq = 0
-        self.text = "[Beginning]"
+        self.text = "[البداية]"
 
     def _get_context(self, _lines: int, _recursing=False) -> List[str]:
         return [self.text]

@@ -24,16 +24,16 @@ if 'pytest' not in sys.modules:
         current_version = aqt.mw.col.get_config('lpcg_model_version', default="none")
         if not models.LpcgOne.is_at_version(current_version):
             showWarning(
-                "Your LPCG note type is out of date and needs to be upgraded "
-                "before you can use LPCG. To upgrade the note type, restart Anki "
-                "and respond yes to the prompt.")
+                "نوع ملحوظة ARLPCG الخاص بك قديم ويجب ترقيته "
+                "قبل أن تستطيع استخدام ARLPCG. للترقية، أعد تشغيل أنكي "
+                "وجاوب بنعم على النافذة التي ستظهر.")
             return
         dialog = LPCGDialog(aqt.mw)
         dialog.exec_()
 
     if aqt.mw is not None:
         action = QAction(aqt.mw)
-        action.setText("Import &Lyrics/Poetry")
+        action.setText("استيراد الأشعار")
         aqt.mw.form.menuTools.addAction(action)
         action.triggered.connect(open_dialog)
 
