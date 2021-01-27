@@ -37,6 +37,7 @@ class LPCGDialog(QDialog):
         self.form.cancelButton.clicked.connect(self.reject)
         self.form.openFileButton.clicked.connect(self.onOpenFile)
         self.form.helpButton.clicked.connect(self.onHelp)
+        self.form.automaticCheckBox.clicked.connect(self.onAutomatic)
 
         self.setLayoutDirection(Qt.RightToLeft)
         self.form.textBox.document().setDefaultTextOption(QTextOption(Qt.AlignRight))
@@ -44,8 +45,9 @@ class LPCGDialog(QDialog):
     def accept(self):
         "On close, create notes from the contents of the poem editor."
         title = self.form.titleBox.text().strip()
+        automatic = self.form.automaticCheckBox.isChecked()
 
-        if not title:
+        if not title and not automatic:
             showWarning("يجب أن تدخل عنوانًا لهذه القصيدة.")
             return
         if self.mw.col.findNotes(f'"note:{models.LpcgOne.name}" "Title:{title}"'):  # pylint: disable=no-member
@@ -71,7 +73,8 @@ class LPCGDialog(QDialog):
 
         try:
             notes_generated = add_notes(self.mw.col, config, Note, title, tags, text, did,
-                                        context_lines, group_lines, recite_lines, step)
+                                        context_lines, group_lines, recite_lines, step,
+                                        automatic)
         except KeyError as e:
             showWarning(
                 "تعذر إيجاد حقل {field} في نوع ملحوظة {name} في مجموعتك. "
@@ -85,6 +88,9 @@ class LPCGDialog(QDialog):
             super(LPCGDialog, self).accept()
             self.mw.reset()
             tooltip("%i notes added." % notes_generated)
+
+    def onAutomatic(self):
+        self.form.titleBox.setEnabled(not self.form.titleBox.isEnabled())
 
     def onOpenFile(self):
         """
