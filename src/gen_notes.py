@@ -20,14 +20,14 @@ class PoemLine:
         """
         note.model()['did'] = deck_id  # type: ignore
         note.tags = tags
-        note['Title'] = title
-        note['Subtitle'] = self._format_subtitles(context_lines)
-        note['Sequence'] = str(self.seq)
-        note['Context'] = self._format_context(context_lines)
-        note['Line'] = self._format_text(recite_lines)
+        note['العنوان'] = title
+        note['الباب'] = self._format_subtitles(context_lines)
+        note['الرقم'] = str(self.seq)
+        note['السياق'] = self._format_context(context_lines)
+        note['الأبيات'] = self._format_text(recite_lines)
         prompt = self._get_prompt(recite_lines)
         if prompt is not None:
-            note['Prompt'] = prompt
+            note['محث'] = prompt
 
     def _format_subtitles(self, context_lines: int):
         subs = [f"<p>{self.subtitle}</p>"]

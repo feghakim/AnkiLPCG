@@ -149,23 +149,23 @@ class LpcgOne(ModelData):
     class LpcgOneTemplate(TemplateData):
         name = "ARLPCG1"
         front = """
-            <div class="title">{{Title}}: {{Sequence}}</div>
-            <div class="title">{{Subtitle}}</div>
-            <div class="lines  alert">{{Context}}</div>
+            <div class="title">{{العنوان}}: {{الرقم}}</div>
+            <div class="title">{{الباب}}</div>
+            <div class="lines  alert">{{السياق}}</div>
             <div class="cloze alert">
-                {{#Prompt}}{{Prompt}}{{/Prompt}}
-                {{^Prompt}}[...]{{/Prompt}}
+                {{#محث}}{{محث}}{{/محث}}
+                {{^محث}}[...]{{/محث}}
             </div>
         """
         back = """
-            <div class="title">{{Title}} {{Sequence}}</div>
-            <div class="title">{{Subtitle}}</div>
-            <div class="lines alert">{{Context}}</div>
-            <div class="cloze alert">{{Line}}</div>
+            <div class="title">{{العنوان}} {{الرقم}}</div>
+            <div class="title">{{الباب}}</div>
+            <div class="lines alert">{{السياق}}</div>
+            <div class="cloze alert">{{الأبيات}}</div>
         """
 
     name = "ARLPCG 1.0"
-    fields = ("Line", "Context", "Title", "Subtitle", "Sequence", "Prompt")
+    fields = ("الأبيات", "السياق", "العنوان", "الباب", "الرقم", "محث")
     templates = (LpcgOneTemplate,)
     styling = """
         .card {
@@ -241,7 +241,7 @@ class LpcgOne(ModelData):
         .mobile .card img {height:unset  !important; width:unset  !important;}
         /*End of style added by resize image add-on*/
     """
-    sort_field = "Sequence"
+    sort_field = "الرقم"
     is_cloze = False
     version = "1.0.0"
     upgrades = tuple()
