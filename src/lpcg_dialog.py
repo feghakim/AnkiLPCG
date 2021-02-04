@@ -40,7 +40,10 @@ class LPCGDialog(QDialog):
         self.form.automaticCheckBox.clicked.connect(self.onAutomatic)
 
         self.setLayoutDirection(Qt.RightToLeft)
-        self.form.textBox.document().setDefaultTextOption(QTextOption(Qt.AlignRight))
+        opt = QTextOption()
+        opt.setTextDirection(Qt.RightToLeft)
+        opt.setAlignment(Qt.AlignRight)
+        self.form.textBox.document().setDefaultTextOption(opt)
 
     def accept(self):
         "On close, create notes from the contents of the poem editor."
