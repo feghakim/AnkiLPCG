@@ -162,10 +162,13 @@ class LpcgOne(ModelData):
             <div class="title">{{الباب}}</div>
             <div class="lines alert">{{السياق}}</div>
             <div class="cloze alert">{{الأبيات}}</div>
+            {{#إضافي}}
+                <div class="extra">{{إضافي}}</div>
+            {{/إضافي}}
         """
 
     name = "ARLPCG 1.0"
-    fields = ("الأبيات", "السياق", "العنوان", "الباب", "الرقم", "محث")
+    fields = ("الأبيات", "السياق", "العنوان", "الباب", "الرقم", "محث", "إضافي")
     templates = (LpcgOneTemplate,)
     styling = """
         .card {
@@ -192,12 +195,12 @@ class LpcgOne(ModelData):
             border-radius: .25rem;
         }
 
-        .lines  {
+        .lines, .extra {
             color: #004085;
             background: #cce5ff;
         }
 
-        .nightMode .lines {
+        .nightMode .lines, .nightMode .extra {
             background: #476d7c;
             color: #fff;
         }
