@@ -14,7 +14,8 @@ class PoemLine:
         self.subtitle = ''
 
     def populate_note(self, note: 'Note', title: str, tags: List[str],
-                      context_lines: int, recite_lines: int, deck_id: int) -> None:
+                      context_lines: int, recite_lines: int, deck_id: int,
+                      media: List[str] = []) -> None:
         """
         Fill the _note_ with content testing on the current line.
         """
@@ -25,9 +26,13 @@ class PoemLine:
         note['الرقم'] = str(self.seq)
         note['السياق'] = self._format_context(context_lines)
         note['الأبيات'] = self._format_text(recite_lines)
+        note['وسائط'] = self._format_media(media)
         prompt = self._get_prompt(recite_lines)
         if prompt is not None:
             note['محث'] = prompt
+
+    def _format_media(self, media: List[str] = []):
+        return ''.join(name for name in media)
 
     def _format_subtitles(self, context_lines: int):
         subs = [f"<p>{self.subtitle}</p>"]
@@ -95,7 +100,8 @@ class Beginning(PoemLine):
         raise NotImplementedError
 
     def populate_note(self, note: 'Note', title: str, tags: List[str],
-                      context_lines: int, recite_lines: int, deck_id: int) -> None:
+                      context_lines: int, recite_lines: int, deck_id: int,
+                      media: List[str] = []) -> None:
         raise AssertionError("The Beginning node cannot be used to populate a note.")
 
 
@@ -309,6 +315,7 @@ def detect_format_and_parse(text: str):
 def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
               title: str, tags: List[str], text: List[str], deck_id: int,
               context_lines: int, group_lines: int, recite_lines: int, step: int = 1,
+              media: List[str] = [],
               automatic: bool = False):
     """
     Generate notes from the given title, tags, poem text, and number of
@@ -325,14 +332,14 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
     if not automatic:
         for line in _poemlines_from_textlines(config, text, group_lines)[0::step]:
             n = note_constructor(col, model)
-            line.populate_note(n, title, tags, context_lines, recite_lines, deck_id)
+            line.populate_note(n, title, tags, context_lines, recite_lines, deck_id, media)
             col.addNote(n)
             added += 1
     else:
         parsed = detect_format_and_parse("\n".join(text))
         for line in _poemlines_from_textlines_automatic(config, parsed, group_lines)[0::step]:
             n = note_constructor(col, model)
-            line.populate_note(n, parsed['title'], tags, context_lines, recite_lines, deck_id)
+            line.populate_note(n, parsed['title'], tags, context_lines, recite_lines, deck_id, media)
             col.addNote(n)
             added += 1
 

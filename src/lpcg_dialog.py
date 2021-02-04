@@ -1,4 +1,6 @@
 import codecs
+import urllib
+import html
 
 # pylint: disable=no-name-in-module
 from PyQt5.QtWidgets import QDialog
@@ -6,9 +8,11 @@ from PyQt5.QtGui import QDesktopServices, QTextOption
 from PyQt5.QtCore import QUrl, Qt
 
 import aqt
+import aqt.editor
 from aqt.qt import QAction  # type: ignore
 from aqt.utils import getFile, showWarning, askUser, tooltip
 from anki.notes import Note
+
 
 from . import import_dialog as lpcg_form
 from .gen_notes import add_notes, cleanse_text
@@ -45,6 +49,9 @@ class LPCGDialog(QDialog):
         opt.setAlignment(Qt.AlignRight)
         self.form.textBox.document().setDefaultTextOption(opt)
 
+        self.media = []
+        self.form.mediaButton.clicked.connect(self.onMedia)
+
     def accept(self):
         "On close, create notes from the contents of the poem editor."
         title = self.form.titleBox.text().strip()
@@ -73,10 +80,11 @@ class LPCGDialog(QDialog):
         group_lines = self.form.groupLinesSpin.value()
         step = self.form.StepSpin.value()
         did = self.deckChooser.selectedId()
+        self.writeMedia()
 
         try:
             notes_generated = add_notes(self.mw.col, config, Note, title, tags, text, did,
-                                        context_lines, group_lines, recite_lines, step,
+                                        context_lines, group_lines, recite_lines, step, self.media,
                                         automatic)
         except KeyError as e:
             showWarning(
@@ -95,6 +103,25 @@ class LPCGDialog(QDialog):
     def onAutomatic(self):
         self.form.titleBox.setEnabled(not self.form.titleBox.isEnabled())
 
+    def onMedia(self):
+        filenames = getFile(self, "استيراد وسائط", None, key="import", multi=True)
+        self.media = filenames
+
+    # from aqt/editor.py with some changes
+    def fnameToLink(self, fname: str) -> str:
+        ext = fname.split(".")[-1].lower()
+        if ext in aqt.editor.pics:
+            name = urllib.parse.quote(fname.encode("utf8"))
+            return '<img src="%s">' % name
+        else:
+            return "[sound:%s]" % html.escape(fname, quote=False)
+
+    def writeMedia(self):
+        new_filenames = []
+        for filename in self.media:
+            new_filenames.append(self.fnameToLink(self.mw.col.media.add_file(filename)))
+        self.media = new_filenames
+
     def onOpenFile(self):
         """
         Read a text file (in UTF-8 encoding) and replace the contents of the
@@ -104,7 +131,7 @@ class LPCGDialog(QDialog):
                 and not askUser("سيؤدي استيراد ملف إلى استبدال المحتوى الحالي لمحرر الأشعار. "
                                 "هل تريد الاستمرار؟")):
             return
-        filename = getFile(self, "Import file", None, key="import")
+        filename = getFile(self, "استيراد نص", None, key="import")
         if not filename: # canceled
             return
         with codecs.open(filename, 'r', 'utf-8') as f:

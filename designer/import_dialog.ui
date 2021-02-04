@@ -141,7 +141,6 @@
        </property>
       </widget>
      </item>
-
    <item row="10" column="1">
      <widget class="QCheckBox" name="automaticCheckBox">
        <property name="text">
@@ -149,7 +148,13 @@
         </property>
      </widget>
    </item>
-
+     <item row="11" column="1">
+      <widget class="QPushButton" name="mediaButton">
+       <property name="text">
+        <string>&amp;أضف وسائط</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>

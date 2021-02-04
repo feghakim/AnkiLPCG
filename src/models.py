@@ -165,10 +165,11 @@ class LpcgOne(ModelData):
             {{#إضافي}}
                 <div class="extra">{{إضافي}}</div>
             {{/إضافي}}
+            <div>{{وسائط}}</div>
         """
 
     name = "ARLPCG 1.0"
-    fields = ("الأبيات", "السياق", "العنوان", "الباب", "الرقم", "محث", "إضافي")
+    fields = ("الأبيات", "السياق", "العنوان", "الباب", "الرقم", "محث", "وسائط", "إضافي")
     templates = (LpcgOneTemplate,)
     styling = """
         .card {
