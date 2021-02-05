@@ -1,4 +1,13 @@
-LPCG Options:
+<div dir="rtl" style="margin-right: 5px;">
 
-**endOfStanzaMarker**: This string will be added at the end of the last line of each stanza. It should normally begin with a space so it isn’t squashed against the end of the last word on the line.
-**endOfTextMarker**: Like *endOfStanzaMarker*, but appears at the end of the last line of the entire text.
+<b>beginningLine</b>: نص يوضع قبل السطور المجاورة في جانب السؤال في حال كانت قيمة خيار السطور المجاورة أكبر
+من عدد السطور السياقية المتوفرة في بداية النص. القيمة الافتراضية هي "[البداية]".
+
+<b>endOfStanzaMarker</b>: يضاف هذا النص إلى آخر كل بيت من كل باب. يجب أن يبدأ عادة بمسافة لكي لا
+يلتصق مع آخر كلمة من السطر.
+<br>
+
+<b>endOfTextMarker</b>: مثل *endOfStanzaMarker*، لكنه يظهر في آخر سطر من النص ككل.
+<br>
+
+</div>
