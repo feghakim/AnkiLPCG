@@ -105,7 +105,8 @@ class LPCGDialog(QDialog):
 
     def onMedia(self):
         filenames = getFile(self, "استيراد وسائط", None, key="import", multi=True)
-        self.media = filenames
+        if filenames:
+            self.media = filenames
 
     # from aqt/editor.py with some changes
     def fnameToLink(self, fname: str) -> str:
