@@ -309,7 +309,7 @@ def parse_text(pattern, text):
     return ret
 
 def detect_format_and_parse(text: str):
-    return parse_text(r"(?P<title>.*)\n(?P<verses>(\d+\..*\n)+)", text)
+    return parse_text(r"(?P<title>.*)\n(?P<verses>(\d+\..*\n?)+)", text)
 
 
 def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
