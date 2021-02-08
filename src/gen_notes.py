@@ -1,6 +1,7 @@
 from itertools import zip_longest
 import re
-from typing import Any, Callable, Dict, Iterable, List, Optional, TYPE_CHECKING
+import math
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from anki.notes import Note
@@ -15,7 +16,7 @@ class PoemLine:
 
     def populate_note(self, note: 'Note', title: str, tags: List[str],
                       context_lines: int, recite_lines: int, deck_id: int,
-                      media: List[str] = []) -> None:
+                      step: int = 1, media: List[str] = []) -> None:
         """
         Fill the _note_ with content testing on the current line.
         """
@@ -23,7 +24,7 @@ class PoemLine:
         note.tags = tags
         note['العنوان'] = title
         note['الباب'] = self._format_subtitles(context_lines)
-        note['الرقم'] = str(self.seq)
+        note['الرقم'] = str(math.ceil(self.seq/step))
         note['السياق'] = self._format_context(context_lines)
         note['الأبيات'] = self._format_text(recite_lines)
         note['وسائط'] = self._format_media(media)
@@ -35,11 +36,14 @@ class PoemLine:
         return ''.join(name for name in media)
 
     def _format_subtitles(self, context_lines: int):
-        subs = [f"<p>{self.subtitle}</p>"]
+        if self.subtitle:
+            subs = [f"<p>{self.subtitle}</p>"]
+        else:
+            subs = []
         cur = self.predecessor
         suc = self
         while context_lines > 0:
-            if cur.subtitle != suc.subtitle:
+            if cur.subtitle and cur.subtitle != suc.subtitle:
                 subs.append(f"<p>{cur.subtitle}</p>")
             suc = cur
             cur = cur.predecessor
@@ -101,7 +105,7 @@ class Beginning(PoemLine):
 
     def populate_note(self, note: 'Note', title: str, tags: List[str],
                       context_lines: int, recite_lines: int, deck_id: int,
-                      media: List[str] = []) -> None:
+                      step: int = 1, media: List[str] = []) -> None:
         raise AssertionError("The Beginning node cannot be used to populate a note.")
 
 
@@ -160,7 +164,7 @@ class GroupedLine(PoemLine):
         /E
         \F
     """
-    def __init__(self, text: List[str], predecessor: 'PoemLine', subtitle: str = '') -> None:
+    def __init__(self, text: List[str], predecessor: 'PoemLine', subtitle: Union[str, Iterable] = '') -> None:
         super().__init__()
         self.text_lines = text
         self.predecessor = predecessor
@@ -188,6 +192,22 @@ class GroupedLine(PoemLine):
         else:
             return f"[...{lines_to_recite}]"
 
+    def _format_subtitles(self, context_lines: int):
+        if context_lines < 0:
+            return ''
+        subs = []
+        if isinstance(self.subtitle, Iterable):
+            prev = ''
+            for i, s in enumerate(self.subtitle):
+                if s and s != prev:
+                    subs.append(f"<p>{s}</p>")
+                prev = s
+        elif self.subtitle:
+            subs.append(f"<p>{self.subtitle}</p>")
+        prev_sub = self.predecessor._format_subtitles(context_lines-1)
+        sub = ''.join(reversed(subs))
+        return prev_sub + sub
+
 
 def groups_of_n(iterable: Iterable, n: int) -> Iterable:
     """
@@ -198,7 +218,7 @@ def groups_of_n(iterable: Iterable, n: int) -> Iterable:
     return zip_longest(*[iter(iterable)]*n)
 
 
-def _poemlines_from_textlines(config: Dict[str, Any], text_lines: List[str], group_lines: int) -> List[PoemLine]:
+def _poemlines_from_textlines(config: Dict[str, Any], text_lines: List[str], group_lines: int, step: int = 1) -> List[PoemLine]:
     """
     Given a list of cleansed text lines, create a list of PoemLine objects
     from it. These are each capable of constructing a correct note testing
@@ -211,19 +231,20 @@ def _poemlines_from_textlines(config: Dict[str, Any], text_lines: List[str], gro
 
     if group_lines == 1:
         for text_line in text_lines:
-            poem_line = SingleLine(text_line, pred)
+            poem_line = SingleLine(text_line, pred, step)
             lines.append(poem_line)
             pred.successor = poem_line
             pred = poem_line
     else:
         for line_set in groups_of_n(text_lines, group_lines):
-            poem_line = GroupedLine([i for i in line_set if i is not None], pred)
+            poem_line = GroupedLine([i for i in line_set if i is not None], pred, step)
             lines.append(poem_line)
             pred.successor = poem_line
             pred = poem_line
     return lines
 
-def _poemlines_from_textlines_automatic(config: Dict[str, Any], text_lines: List[Dict], group_lines: int) -> List[PoemLine]:
+
+def _poemlines_from_textlines_automatic(config: Dict[str, Any], text_lines: List[Dict], group_lines: int, step: int = 1) -> List[PoemLine]:
 
     beginning = Beginning(config.get("beginningLine", "[البداية]"))
     lines: List[PoemLine] = []
@@ -237,8 +258,9 @@ def _poemlines_from_textlines_automatic(config: Dict[str, Any], text_lines: List
             pred.successor = poem_line
             pred = poem_line
     else:
+        subtitle_set = list(groups_of_n(text_lines["subtitles"], group_lines))
         for i, line_set in enumerate(groups_of_n(text_lines["verses"], group_lines)):
-            poem_line = GroupedLine([i for i in line_set if i is not None], pred, text_lines["subtitles"][i])
+            poem_line = GroupedLine([i for i in line_set if i is not None], pred, subtitle_set[i])
             lines.append(poem_line)
             pred.successor = poem_line
             pred = poem_line
@@ -309,7 +331,7 @@ def parse_text(pattern, text):
     return ret
 
 def detect_format_and_parse(text: str):
-    return parse_text(r"(?P<title>.*)\n(?P<verses>(\d+\..*\n?)+)", text)
+    return parse_text(r"(?P<title>.*)\n(?P<verses>(\d+[.-].*\n?)+)", text)
 
 
 def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
@@ -330,16 +352,16 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
     added = 0
     model = col.models.byName("ARLPCG 1.0")
     if not automatic:
-        for line in _poemlines_from_textlines(config, text, group_lines)[0::step]:
+        for line in _poemlines_from_textlines(config, text, group_lines, step)[0::step]:
             n = note_constructor(col, model)
-            line.populate_note(n, title, tags, context_lines, recite_lines, deck_id, media)
+            line.populate_note(n, title, tags, context_lines, recite_lines, deck_id, step, media)
             col.addNote(n)
             added += 1
     else:
         parsed = detect_format_and_parse("\n".join(text))
-        for line in _poemlines_from_textlines_automatic(config, parsed, group_lines)[0::step]:
+        for line in _poemlines_from_textlines_automatic(config, parsed, group_lines, step)[0::step]:
             n = note_constructor(col, model)
-            line.populate_note(n, parsed['title'], tags, context_lines, recite_lines, deck_id, media)
+            line.populate_note(n, parsed['title'], tags, context_lines, recite_lines, deck_id, step, media)
             col.addNote(n)
             added += 1
 

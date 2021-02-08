@@ -458,3 +458,150 @@ def test_render_increase_all_options(mock_note):
         "<p>And keep us through life's wintry days.X</p>"
     )
     assert col.notes[7]['محث'] == "[...2]"
+
+def test_render_steps(mock_note):
+
+    col = mock_note['col']
+    mock_note['step'] = 2
+    num_added = add_notes(**mock_note)
+
+    assert num_added == 8
+    assert len(col.notes) == 8
+
+    assert col.notes[0]['العنوان'] == mock_note['title']
+    assert col.notes[0].tags == mock_note['tags']
+    assert col.notes[0]['الرقم'] == "1"
+    assert col.notes[0]['السياق'] == "<p>[البداية]</p>"
+    assert col.notes[0]['الأبيات'] == "<p>'Tis winter now; the fallen snow</p>"
+    assert 'محث' not in col.notes[0]
+
+    assert col.notes[3]['العنوان'] == mock_note['title']
+    assert col.notes[3].tags == mock_note['tags']
+    assert col.notes[3]['الرقم'] == "4"
+    assert col.notes[3]['السياق'] == (
+        "<p>And yet God's love is not withdrawn;</p>"
+        "<p>His life within the keen air breathes;</p>"
+    )
+    assert col.notes[3]['الأبيات'] == "<p>God's beauty paints the crimson dawn,</p>"
+    assert 'محث' not in col.notes[3]
+
+
+automatic_test_poem = dedent("""
+    مَتْنُ نَظْمِ الْآجُرٌّومِيَّة
+    1. قَـالَ عُبَيْدُ رَبِهِ مُحَـمَّدُ ** اللهَ فِي كُـلِّ الأُمُـورِ أَحْـمَد
+    2. مُصَلِّـيًا عَلَى الرَّسُولِ المُنْتَقَى ** وَآلِـهِ وَصَحْـبِهِ ذَوِي التُّـقَى
+    3. وَبَعْـدُ فَالقَصْـدُ بِذَا المَنْظُومِ ** تَسْهِيلُ مَنْـثُورِ ابْـنِ آجُـرُّومِ
+    4. لِـمَنْ أَرَادَ حِفْـظَهُ وَعَسُرَا ** عَلَيْهِ أَنْ يَحْـفَظَ مَـا قَـدْ نُثِرَا
+    5. واللهَ أَسْتَعِـينُ فِي كُلِّ عَمَلْ ** إِلَيْهِ قَصْـدِي وَعَلَـيْهِ المُتَّـكَلْ
+    بَابُ الكَلاَمِ
+    6. إِنَّ الكَلاَمَ عِنْـدَنَا فَلْتَسْتَمِعْ ** لَفْظٌ مُـرَكَّبٌ مُفِـيدٌ قَـدْ وُضِعْ
+    7. أَقْسَـامُهُ الَّتِي عَـلَيْهَا يُبْنَى ** اِسْمٌ وَفِعْـلٌ ثُمَّ حَـرْفُ مَـعْنَى
+    8. فَالاِسْمُ بِالخَفْضِ وَبِالتَّنْوِينِ أَوْ ** دُخُولِ «أَلْ» يُعْرَفُ فَاقْفُ مَا قَفَوا
+    9. وَبِحُرُوفِ الخّفْضِ وَهْيَ مِنْ، إِلَى ** وَعَنْ، وَفِي، وَرُبَّ، وَالبَا، وَعَلَى
+    10.وَالكَافُ، والَّلاَمُ، وَوَاوٌ، وَالتَّا ** وَمُذْ، وَمُنْذُ، وَلَعَلّ، حَتَّى
+    11. وَالفِعْلُ بِالسِّينِ، وَسَوْفَ، وَبِقَدْ ** فَاعْلَمْ، وَتَا التَّأْنِيثِ، مَيْزُهُ وَرَدْ
+    12. وَالحَرْفُ يُعْـرَفُ بِأَلاَّ يَقْبَلاَ ** لاِسْمٍ وَلاَ فِعْلٍ دَلِيلاً كَـ «بَلَى»
+    بَابُ الإِعْرَابِ
+    13- الاِعْرَابُ تَغْييرُ أَوَاخِرِ الكَلِمْ ** تَقْدِيرًا اوْ لَفْظًا فَذَا الحَدَّ اغْتَنِم
+    14- وَذَلِكَ التَّغْيِيرُ لاِضْطِرَابِ ** عَوَامِلٍ تَدْخُلُ لِلإِعْرَابِ
+    15- أقْسَامُهُ أَرْبَعَةٌ تُؤَمُّ ** رَفْـعٌ، وَنَصْـبٌ، ثُمَّ خَفْضٌ، جَـزْمُ
+    16- فَالأَوَّلاَنِ دُونَ رَيْبٍ وَقَعَا ** فِي الاِسْمِ وَالفِعْلِ المُضَارِعِ مَعَا
+    17- وَالاِسْمُ قَدْ خُصِّصَ بِالخّفْضِ كَمَا ** قَدْ خُصِّصَ الفِعْلُ بِجَزْمٍ فَاعْلَمَا
+    """).strip()
+
+
+def test_render_automatic(mock_note):
+    """
+    Test the so-called automatic mode where title and subtitles interspersed in the peom text are recognized
+    and verses are expected to be numbered.
+    """
+
+    col = mock_note['col']
+    mock_note['step'] = 3
+    mock_note['title'] = 'مَتْنُ نَظْمِ الْآجُرٌّومِيَّة'
+    mock_note['text'] = cleanse_text(automatic_test_poem, MOCK_CLEANSE_CONFIG)
+    mock_note['automatic'] = True
+    num_added = add_notes(**mock_note)
+
+    assert num_added == 6
+    assert len(col.notes) == 6
+
+    assert col.notes[0]['العنوان'] == mock_note['title']
+    assert col.notes[0]['الباب'] == ''
+    assert col.notes[0]['الرقم'] == "1"
+    assert col.notes[0]['السياق'] == "<p>[البداية]</p>"
+    assert col.notes[0]['الأبيات'] == "<p>1. قَـالَ عُبَيْدُ رَبِهِ مُحَـمَّدُ ** اللهَ فِي كُـلِّ الأُمُـورِ أَحْـمَد</p>"
+    assert 'محث' not in col.notes[0]
+
+    assert col.notes[2]['العنوان'] == mock_note['title']
+    assert col.notes[2]['الباب'] == '<p>بَابُ الكَلاَمِ</p>'
+    assert col.notes[2]['الرقم'] == "3"
+    assert col.notes[2]['السياق'] == (
+        "<p>5. واللهَ أَسْتَعِـينُ فِي كُلِّ عَمَلْ ** إِلَيْهِ قَصْـدِي وَعَلَـيْهِ المُتَّـكَلْ</p>"
+        "<p>6. إِنَّ الكَلاَمَ عِنْـدَنَا فَلْتَسْتَمِعْ ** لَفْظٌ مُـرَكَّبٌ مُفِـيدٌ قَـدْ وُضِعْ</p>"
+    )
+    assert col.notes[2]['الأبيات'] == "<p>7. أَقْسَـامُهُ الَّتِي عَـلَيْهَا يُبْنَى ** اِسْمٌ وَفِعْـلٌ ثُمَّ حَـرْفُ مَـعْنَى</p>"
+
+    assert col.notes[4]['العنوان'] == mock_note['title']
+    assert col.notes[4]['الباب'] == '<p>بَابُ الكَلاَمِ</p><p>بَابُ الإِعْرَابِ</p>'
+    assert col.notes[4]['الرقم'] == "5"
+    assert col.notes[4]['السياق'] == (
+        "<p>11. وَالفِعْلُ بِالسِّينِ، وَسَوْفَ، وَبِقَدْ ** فَاعْلَمْ، وَتَا التَّأْنِيثِ، مَيْزُهُ وَرَدْ</p>"
+        "<p>12. وَالحَرْفُ يُعْـرَفُ بِأَلاَّ يَقْبَلاَ ** لاِسْمٍ وَلاَ فِعْلٍ دَلِيلاً كَـ «بَلَى»</p>"
+    )
+    assert col.notes[4]['الأبيات'] == "<p>13- الاِعْرَابُ تَغْييرُ أَوَاخِرِ الكَلِمْ ** تَقْدِيرًا اوْ لَفْظًا فَذَا الحَدَّ اغْتَنِم</p>"
+
+
+def test_render_automatic_groups(mock_note):
+
+    col = mock_note['col']
+    mock_note['group_lines'] = 2
+    mock_note['context_lines'] = 1
+    mock_note['title'] = 'مَتْنُ نَظْمِ الْآجُرٌّومِيَّة'
+    mock_note['text'] = cleanse_text(automatic_test_poem, MOCK_CLEANSE_CONFIG)
+    mock_note['automatic'] = True
+    num_added = add_notes(**mock_note)
+
+    assert num_added == 9
+    assert len(col.notes) == 9
+
+    assert col.notes[6]['محث'] == "[...2]"
+    assert col.notes[6]['العنوان'] == mock_note['title']
+    assert col.notes[6]['الباب'] == '<p>بَابُ الكَلاَمِ</p><p>بَابُ الإِعْرَابِ</p>'
+    assert col.notes[6]['الرقم'] == "7"
+    assert col.notes[6]['السياق'] == (
+        "<p>11. وَالفِعْلُ بِالسِّينِ، وَسَوْفَ، وَبِقَدْ ** فَاعْلَمْ، وَتَا التَّأْنِيثِ، مَيْزُهُ وَرَدْ</p>"
+        "<p>12. وَالحَرْفُ يُعْـرَفُ بِأَلاَّ يَقْبَلاَ ** لاِسْمٍ وَلاَ فِعْلٍ دَلِيلاً كَـ «بَلَى»</p>"
+    )
+    assert col.notes[6]['الأبيات'] == (
+        "<p>13- الاِعْرَابُ تَغْييرُ أَوَاخِرِ الكَلِمْ ** تَقْدِيرًا اوْ لَفْظًا فَذَا الحَدَّ اغْتَنِم</p>"
+        "<p>14- وَذَلِكَ التَّغْيِيرُ لاِضْطِرَابِ ** عَوَامِلٍ تَدْخُلُ لِلإِعْرَابِ</p>"
+    )
+
+def test_render_automatic_groups_with_steps(mock_note):
+
+    col = mock_note['col']
+    mock_note['group_lines'] = 2
+    mock_note['context_lines'] = 1
+    mock_note['step'] = 2
+    mock_note['title'] = 'مَتْنُ نَظْمِ الْآجُرٌّومِيَّة'
+    mock_note['text'] = cleanse_text(automatic_test_poem, MOCK_CLEANSE_CONFIG)
+    mock_note['automatic'] = True
+    num_added = add_notes(**mock_note)
+
+    assert num_added == 5
+    assert len(col.notes) == 5
+
+    assert col.notes[0]['محث'] == "[...2]"
+    assert 'محث' not in col.notes[4]
+    assert col.notes[3]['العنوان'] == mock_note['title']
+    assert col.notes[3]['الباب'] == '<p>بَابُ الكَلاَمِ</p><p>بَابُ الإِعْرَابِ</p>'
+    assert col.notes[3]['الرقم'] == "4"
+    assert col.notes[3]['السياق'] == (
+        "<p>11. وَالفِعْلُ بِالسِّينِ، وَسَوْفَ، وَبِقَدْ ** فَاعْلَمْ، وَتَا التَّأْنِيثِ، مَيْزُهُ وَرَدْ</p>"
+        "<p>12. وَالحَرْفُ يُعْـرَفُ بِأَلاَّ يَقْبَلاَ ** لاِسْمٍ وَلاَ فِعْلٍ دَلِيلاً كَـ «بَلَى»</p>"
+    )
+    assert col.notes[3]['الأبيات'] == (
+        "<p>13- الاِعْرَابُ تَغْييرُ أَوَاخِرِ الكَلِمْ ** تَقْدِيرًا اوْ لَفْظًا فَذَا الحَدَّ اغْتَنِم</p>"
+        "<p>14- وَذَلِكَ التَّغْيِيرُ لاِضْطِرَابِ ** عَوَامِلٍ تَدْخُلُ لِلإِعْرَابِ</p>"
+    )
