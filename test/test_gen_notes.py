@@ -166,6 +166,7 @@ class MockNote:
 @pytest.fixture
 def mock_note():
     col = MockCollection()
+    config = {}
     note_constructor = MockNote
     title = "'Tis Winter"
     tags = ["poem", "test"]
@@ -173,6 +174,9 @@ def mock_note():
     context_lines = 2
     recite_lines = 1
     group_lines = 1
+    step = 1
+    media = []
+    automatic = False
     text = cleanse_text(test_poem, MOCK_CLEANSE_CONFIG)
     return dict(locals())
 
@@ -184,22 +188,22 @@ def test_render_default_settings(mock_note):
     assert num_added == 16
     assert len(col.notes) == 16
 
-    assert col.notes[0]['Title'] == mock_note['title']
+    assert col.notes[0]['العنوان'] == mock_note['title']
     assert col.notes[0].tags == mock_note['tags']
-    assert col.notes[0]['Sequence'] == "1"
-    assert col.notes[0]['Context'] == "<p>[Beginning]</p>"
-    assert col.notes[0]['Line'] == "<p>'Tis winter now; the fallen snow</p>"
-    assert 'Prompt' not in col.notes[0]
+    assert col.notes[0]['الرقم'] == "1"
+    assert col.notes[0]['السياق'] == "<p>[البداية]</p>"
+    assert col.notes[0]['الأبيات'] == "<p>'Tis winter now; the fallen snow</p>"
+    assert 'محث' not in col.notes[0]
 
-    assert col.notes[3]['Title'] == mock_note['title']
+    assert col.notes[3]['العنوان'] == mock_note['title']
     assert col.notes[3].tags == mock_note['tags']
-    assert col.notes[3]['Sequence'] == "4"
-    assert col.notes[3]['Context'] == (
+    assert col.notes[3]['الرقم'] == "4"
+    assert col.notes[3]['السياق'] == (
         "<p>Has left the heavens all coldly clear;</p>"
         "<p>Through leafless boughs the sharp winds blow,</p>"
     )
-    assert col.notes[3]['Line'] == "<p>And all the earth lies dead and drear.Y</p>"
-    assert 'Prompt' not in col.notes[3]
+    assert col.notes[3]['الأبيات'] == "<p>And all the earth lies dead and drear.Y</p>"
+    assert 'محث' not in col.notes[3]
 
 
 ### GROUPS ###
@@ -212,25 +216,25 @@ def test_render_groups_of_two(mock_note):
     assert len(col.notes) == 8
 
     # We won't bother testing title and tags for further items.
-    assert col.notes[0]['Sequence'] == "1"
-    assert col.notes[0]['Context'] == "<p>[Beginning]</p>"
-    assert col.notes[0]['Line'] == (
+    assert col.notes[0]['الرقم'] == "1"
+    assert col.notes[0]['السياق'] == "<p>[البداية]</p>"
+    assert col.notes[0]['الأبيات'] == (
         "<p>'Tis winter now; the fallen snow</p>"
         "<p>Has left the heavens all coldly clear;</p>"
     )
-    assert col.notes[0]['Prompt'] == "[...2]"
+    assert col.notes[0]['محث'] == "[...2]"
 
-    assert col.notes[1]['Sequence'] == "2"
-    assert col.notes[1]['Context'] == (
-        "<p>[Beginning]</p>"
+    assert col.notes[1]['الرقم'] == "2"
+    assert col.notes[1]['السياق'] == (
+        "<p>[البداية]</p>"
         "<p>'Tis winter now; the fallen snow</p>"
         "<p>Has left the heavens all coldly clear;</p>"
     )
-    assert col.notes[1]['Line'] == (
+    assert col.notes[1]['الأبيات'] == (
         "<p>Through leafless boughs the sharp winds blow,</p>"
         "<p>And all the earth lies dead and drear.Y</p>"
     )
-    assert col.notes[1]['Prompt'] == "[...2]"
+    assert col.notes[1]['محث'] == "[...2]"
 
 
 def test_render_groups_of_three(mock_note):
@@ -241,21 +245,21 @@ def test_render_groups_of_three(mock_note):
     assert num_added == 6
     assert len(col.notes) == 6
 
-    assert col.notes[0]['Title'] == mock_note['title']
+    assert col.notes[0]['العنوان'] == mock_note['title']
     assert col.notes[0].tags == mock_note['tags']
-    assert col.notes[0]['Sequence'] == "1"
-    assert col.notes[0]['Context'] == "<p>[Beginning]</p>"
-    assert col.notes[0]['Line'] == (
+    assert col.notes[0]['الرقم'] == "1"
+    assert col.notes[0]['السياق'] == "<p>[البداية]</p>"
+    assert col.notes[0]['الأبيات'] == (
         "<p>'Tis winter now; the fallen snow</p>"
         "<p>Has left the heavens all coldly clear;</p>"
         "<p>Through leafless boughs the sharp winds blow,</p>"
     )
-    assert col.notes[0]['Prompt'] == "[...3]"
+    assert col.notes[0]['محث'] == "[...3]"
 
     # Last item has six lines of context but only one recitation line, with no prompt
     # (as 16 % 3 = 1).
-    assert col.notes[5]['Sequence'] == "6"
-    assert col.notes[5]['Context'] == (
+    assert col.notes[5]['الرقم'] == "6"
+    assert col.notes[5]['السياق'] == (
         "<p>And skies are chill, and frosts are keen,</p>"
         "<p>Home closer draws her circle now,</p>"
         "<p>And warmer glows her light within.Y</p>"
@@ -263,8 +267,8 @@ def test_render_groups_of_three(mock_note):
         "<p>As well as summer's joyous rays,</p>"
         "<p>Us warmly in Thy love enfold,</p>"
     )
-    assert col.notes[5]['Line'] == "<p>And keep us through life's wintry days.X</p>"
-    assert 'Prompt' not in col.notes[5], col.notes[5]['Prompt']
+    assert col.notes[5]['الأبيات'] == "<p>And keep us through life's wintry days.X</p>"
+    assert 'محث' not in col.notes[5], col.notes[5]['محث']
 
 
 ### CONTEXT LINES ###
@@ -276,37 +280,37 @@ def test_render_three_context_lines(mock_note):
     assert num_added == 16
     assert len(col.notes) == 16
 
-    assert col.notes[0]['Sequence'] == "1"
-    assert col.notes[0]['Context'] == "<p>[Beginning]</p>"
-    assert col.notes[0]['Line'] == "<p>'Tis winter now; the fallen snow</p>"
-    assert 'Prompt' not in col.notes[0]
+    assert col.notes[0]['الرقم'] == "1"
+    assert col.notes[0]['السياق'] == "<p>[البداية]</p>"
+    assert col.notes[0]['الأبيات'] == "<p>'Tis winter now; the fallen snow</p>"
+    assert 'محث' not in col.notes[0]
 
-    assert col.notes[1]['Context'] == (
-        "<p>[Beginning]</p>"
+    assert col.notes[1]['السياق'] == (
+        "<p>[البداية]</p>"
         "<p>'Tis winter now; the fallen snow</p>"
     )
-    assert col.notes[1]['Line'] == "<p>Has left the heavens all coldly clear;</p>"
+    assert col.notes[1]['الأبيات'] == "<p>Has left the heavens all coldly clear;</p>"
 
-    assert col.notes[2]['Context'] == (
-        "<p>[Beginning]</p>"
+    assert col.notes[2]['السياق'] == (
+        "<p>[البداية]</p>"
         "<p>'Tis winter now; the fallen snow</p>"
         "<p>Has left the heavens all coldly clear;</p>"
     )
-    assert col.notes[2]['Line'] == "<p>Through leafless boughs the sharp winds blow,</p>"
+    assert col.notes[2]['الأبيات'] == "<p>Through leafless boughs the sharp winds blow,</p>"
 
-    assert col.notes[3]['Context'] == (
+    assert col.notes[3]['السياق'] == (
         "<p>'Tis winter now; the fallen snow</p>"
         "<p>Has left the heavens all coldly clear;</p>"
         "<p>Through leafless boughs the sharp winds blow,</p>"
     )
-    assert col.notes[3]['Line'] == "<p>And all the earth lies dead and drear.Y</p>"
+    assert col.notes[3]['الأبيات'] == "<p>And all the earth lies dead and drear.Y</p>"
 
-    assert col.notes[4]['Context'] == (
+    assert col.notes[4]['السياق'] == (
         "<p>Has left the heavens all coldly clear;</p>"
         "<p>Through leafless boughs the sharp winds blow,</p>"
         "<p>And all the earth lies dead and drear.Y</p>"
     )
-    assert col.notes[4]['Line'] == "<p>And yet God's love is not withdrawn;</p>"
+    assert col.notes[4]['الأبيات'] == "<p>And yet God's love is not withdrawn;</p>"
 
 
 ### RECITATION LINES ###
@@ -320,38 +324,38 @@ def test_render_two_recitation_lines(mock_note):
     assert num_added == 16
     assert len(col.notes) == 16
 
-    assert col.notes[0]['Context'] == "<p>[Beginning]</p>"
-    assert col.notes[0]['Line'] == (
+    assert col.notes[0]['السياق'] == "<p>[البداية]</p>"
+    assert col.notes[0]['الأبيات'] == (
         "<p>'Tis winter now; the fallen snow</p>"
         "<p>Has left the heavens all coldly clear;</p>"
     )
-    assert col.notes[0]['Prompt'] == "[...2]"
+    assert col.notes[0]['محث'] == "[...2]"
 
-    assert col.notes[1]['Context'] == (
-        "<p>[Beginning]</p>"
+    assert col.notes[1]['السياق'] == (
+        "<p>[البداية]</p>"
         "<p>'Tis winter now; the fallen snow</p>"
     )
-    assert col.notes[1]['Line'] == (
+    assert col.notes[1]['الأبيات'] == (
         "<p>Has left the heavens all coldly clear;</p>"
         "<p>Through leafless boughs the sharp winds blow,</p>"
     )
 
-    assert col.notes[2]['Context'] == (
+    assert col.notes[2]['السياق'] == (
         "<p>'Tis winter now; the fallen snow</p>"
         "<p>Has left the heavens all coldly clear;</p>"
     )
-    assert col.notes[2]['Line'] == (
+    assert col.notes[2]['الأبيات'] == (
         "<p>Through leafless boughs the sharp winds blow,</p>"
         "<p>And all the earth lies dead and drear.Y</p>"
     )
 
     # The very last line will request a single recitation.
-    assert col.notes[-1]['Context'] == (
+    assert col.notes[-1]['السياق'] == (
         "<p>As well as summer's joyous rays,</p>"
         "<p>Us warmly in Thy love enfold,</p>"
     )
-    assert col.notes[-1]['Line'] == "<p>And keep us through life's wintry days.X</p>"
-    assert 'Prompt' not in col.notes[-1]
+    assert col.notes[-1]['الأبيات'] == "<p>And keep us through life's wintry days.X</p>"
+    assert 'محث' not in col.notes[-1]
 
 
 ### TRIPLE PLAY ###
@@ -372,44 +376,44 @@ def test_render_increase_all_options(mock_note):
     assert num_added == 8
     assert len(col.notes) == 8
 
-    assert col.notes[0]['Context'] == "<p>[Beginning]</p>"
-    assert col.notes[0]['Line'] == (
+    assert col.notes[0]['السياق'] == "<p>[البداية]</p>"
+    assert col.notes[0]['الأبيات'] == (
         "<p>'Tis winter now; the fallen snow</p>"
         "<p>Has left the heavens all coldly clear;</p>"
         "<p>Through leafless boughs the sharp winds blow,</p>"
         "<p>And all the earth lies dead and drear.Y</p>"
     )
-    assert col.notes[0]['Prompt'] == "[...4]"
+    assert col.notes[0]['محث'] == "[...4]"
 
-    assert col.notes[1]['Context'] == (
-        "<p>[Beginning]</p>"
+    assert col.notes[1]['السياق'] == (
+        "<p>[البداية]</p>"
         "<p>'Tis winter now; the fallen snow</p>"
         "<p>Has left the heavens all coldly clear;</p>"
     )
-    assert col.notes[1]['Line'] == (
+    assert col.notes[1]['الأبيات'] == (
         "<p>Through leafless boughs the sharp winds blow,</p>"
         "<p>And all the earth lies dead and drear.Y</p>"
         "<p>And yet God's love is not withdrawn;</p>"
         "<p>His life within the keen air breathes;</p>"
     )
-    assert col.notes[1]['Prompt'] == "[...4]"
+    assert col.notes[1]['محث'] == "[...4]"
 
-    assert col.notes[2]['Context'] == (
-        "<p>[Beginning]</p>"
+    assert col.notes[2]['السياق'] == (
+        "<p>[البداية]</p>"
         "<p>'Tis winter now; the fallen snow</p>"
         "<p>Has left the heavens all coldly clear;</p>"
         "<p>Through leafless boughs the sharp winds blow,</p>"
         "<p>And all the earth lies dead and drear.Y</p>"
     )
-    assert col.notes[2]['Line'] == (
+    assert col.notes[2]['الأبيات'] == (
         "<p>And yet God's love is not withdrawn;</p>"
         "<p>His life within the keen air breathes;</p>"
         "<p>God's beauty paints the crimson dawn,</p>"
         "<p>And clothes the boughs with glittering wreaths.Y</p>"
     )
-    assert col.notes[2]['Prompt'] == "[...4]"
+    assert col.notes[2]['محث'] == "[...4]"
 
-    assert col.notes[3]['Context'] == (
+    assert col.notes[3]['السياق'] == (
         "<p>'Tis winter now; the fallen snow</p>"
         "<p>Has left the heavens all coldly clear;</p>"
         "<p>Through leafless boughs the sharp winds blow,</p>"
@@ -417,15 +421,15 @@ def test_render_increase_all_options(mock_note):
         "<p>And yet God's love is not withdrawn;</p>"
         "<p>His life within the keen air breathes;</p>"
     )
-    assert col.notes[3]['Line'] == (
+    assert col.notes[3]['الأبيات'] == (
         "<p>God's beauty paints the crimson dawn,</p>"
         "<p>And clothes the boughs with glittering wreaths.Y</p>"
         "<p>And though abroad the sharp winds blow,</p>"
         "<p>And skies are chill, and frosts are keen,</p>"
     )
-    assert col.notes[3]['Prompt'] == "[...4]"
+    assert col.notes[3]['محث'] == "[...4]"
 
-    assert col.notes[6]['Context'] == (
+    assert col.notes[6]['السياق'] == (
         "<p>God's beauty paints the crimson dawn,</p>"
         "<p>And clothes the boughs with glittering wreaths.Y</p>"
         "<p>And though abroad the sharp winds blow,</p>"
@@ -433,15 +437,15 @@ def test_render_increase_all_options(mock_note):
         "<p>Home closer draws her circle now,</p>"
         "<p>And warmer glows her light within.Y</p>"
     )
-    assert col.notes[6]['Line'] == (
+    assert col.notes[6]['الأبيات'] == (
         "<p>O God! Who gives the winter's cold</p>"
         "<p>As well as summer's joyous rays,</p>"
         "<p>Us warmly in Thy love enfold,</p>"
         "<p>And keep us through life's wintry days.X</p>"
     )
-    assert col.notes[6]['Prompt'] == "[...4]"
+    assert col.notes[6]['محث'] == "[...4]"
 
-    assert col.notes[7]['Context'] == (
+    assert col.notes[7]['السياق'] == (
         "<p>And though abroad the sharp winds blow,</p>"
         "<p>And skies are chill, and frosts are keen,</p>"
         "<p>Home closer draws her circle now,</p>"
@@ -449,8 +453,8 @@ def test_render_increase_all_options(mock_note):
         "<p>O God! Who gives the winter's cold</p>"
         "<p>As well as summer's joyous rays,</p>"
     )
-    assert col.notes[7]['Line'] == (
+    assert col.notes[7]['الأبيات'] == (
         "<p>Us warmly in Thy love enfold,</p>"
         "<p>And keep us through life's wintry days.X</p>"
     )
-    assert col.notes[7]['Prompt'] == "[...2]"
+    assert col.notes[7]['محث'] == "[...2]"
