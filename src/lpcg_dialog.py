@@ -15,7 +15,7 @@ from anki.notes import Note
 
 
 from . import import_dialog as lpcg_form
-from .gen_notes import add_notes, cleanse_text
+from .gen_notes import add_notes, cleanse_text, ImportMode
 from . import models
 
 
@@ -41,7 +41,8 @@ class LPCGDialog(QDialog):
         self.form.cancelButton.clicked.connect(self.reject)
         self.form.openFileButton.clicked.connect(self.onOpenFile)
         self.form.helpButton.clicked.connect(self.onHelp)
-        self.form.automaticCheckBox.clicked.connect(self.onAutomatic)
+        self.form.automaticCheckBox.toggled.connect(self.onAutomatic)
+        self.form.bySectionCheckBox.toggled.connect(self.onBySection)
 
         self.setLayoutDirection(Qt.RightToLeft)
         opt = QTextOption()
@@ -55,9 +56,9 @@ class LPCGDialog(QDialog):
     def accept(self):
         "On close, create notes from the contents of the poem editor."
         title = self.form.titleBox.text().strip()
-        automatic = self.form.automaticCheckBox.isChecked()
+        mode = self.getImportMode()
 
-        if not title and not automatic:
+        if not title and mode == ImportMode.CUSTOM:
             showWarning("يجب أن تدخل عنوانًا لهذه القصيدة.")
             return
         if self.mw.col.findNotes(f'"note:{models.LpcgOne.name}" "Title:{title}"'):  # pylint: disable=no-member
@@ -85,7 +86,7 @@ class LPCGDialog(QDialog):
         try:
             notes_generated = add_notes(self.mw.col, config, Note, title, tags, text, did,
                                         context_lines, group_lines, recite_lines, step, self.media,
-                                        automatic)
+                                        mode)
         except KeyError as e:
             showWarning(
                 "تعذر إيجاد حقل {field} في نوع ملحوظة {name} في مجموعتك. "
@@ -100,8 +101,27 @@ class LPCGDialog(QDialog):
             self.mw.reset()
             tooltip("%i notes added." % notes_generated)
 
-    def onAutomatic(self):
+    def getImportMode(self) -> ImportMode:
+        if self.form.automaticCheckBox.isChecked():
+            return ImportMode.AUTOMATIC
+        elif self.form.bySectionCheckBox.isChecked():
+            return ImportMode.BY_SECTION
+        else:
+            return ImportMode.CUSTOM
+
+    def onAutomatic(self, checked: bool):
+        if checked:
+            self.form.bySectionCheckBox.setChecked(False)
         self.form.titleBox.setEnabled(not self.form.titleBox.isEnabled())
+
+    def onBySection(self, checked: bool):
+        if checked:
+            self.form.automaticCheckBox.setChecked(False)
+        self.form.titleBox.setEnabled(not self.form.titleBox.isEnabled())
+        self.form.StepSpin.setEnabled(not self.form.StepSpin.isEnabled())
+        self.form.reciteLinesSpin.setEnabled(not self.form.reciteLinesSpin.isEnabled())
+        self.form.contextLinesSpin.setEnabled(not self.form.contextLinesSpin.isEnabled())
+        self.form.groupLinesSpin.setEnabled(not self.form.groupLinesSpin.isEnabled())
 
     def onMedia(self):
         filenames = getFile(self, "استيراد وسائط", None, key="import", multi=True)

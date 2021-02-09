@@ -1,10 +1,17 @@
 from itertools import zip_longest
 import re
 import math
-from typing import Any, Callable, Dict, Iterable, List, Optional, Union, TYPE_CHECKING
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, TYPE_CHECKING
+from enum import Enum, auto
 
 if TYPE_CHECKING:
     from anki.notes import Note
+
+
+class ImportMode(Enum):
+    CUSTOM = auto()
+    AUTOMATIC = auto()
+    BY_SECTION = auto()
 
 
 class PoemLine:
@@ -164,7 +171,7 @@ class GroupedLine(PoemLine):
         /E
         \F
     """
-    def __init__(self, text: List[str], predecessor: 'PoemLine', subtitle: Union[str, Iterable] = '') -> None:
+    def __init__(self, text: List[str], predecessor: 'PoemLine', subtitle: Iterable = '') -> None:
         super().__init__()
         self.text_lines = text
         self.predecessor = predecessor
@@ -196,17 +203,38 @@ class GroupedLine(PoemLine):
         if context_lines < 0:
             return ''
         subs = []
-        if isinstance(self.subtitle, Iterable):
+        if isinstance(self.subtitle, str):
+            subs.append(f"<p>{self.subtitle}</p>")
+        elif isinstance(self.subtitle, Iterable):
             prev = ''
-            for i, s in enumerate(self.subtitle):
+            for s in self.subtitle:
                 if s and s != prev:
                     subs.append(f"<p>{s}</p>")
                 prev = s
-        elif self.subtitle:
-            subs.append(f"<p>{self.subtitle}</p>")
+        else:
+            return ''
         prev_sub = self.predecessor._format_subtitles(context_lines-1)
         sub = ''.join(reversed(subs))
         return prev_sub + sub
+
+
+class PoemSection(GroupedLine):
+    """
+    A poem section having a number of lines, subtitle, and no context lines.
+
+    Intended to be used when the user wants each note to contain a whole section.
+
+    The subtitle is stored in the context field though; this is done because
+    some people found it more aesthetic.
+    """
+    def _get_text(self, lines: int) -> List[str]:
+         return self.text_lines
+
+    def _get_context(self, lines: int, recursing=False) -> List[str]:
+        return [self.subtitle]
+
+    def _format_subtitles(self, context_lines: int):
+        return ''
 
 
 def groups_of_n(iterable: Iterable, n: int) -> Iterable:
@@ -244,7 +272,7 @@ def _poemlines_from_textlines(config: Dict[str, Any], text_lines: List[str], gro
     return lines
 
 
-def _poemlines_from_textlines_automatic(config: Dict[str, Any], text_lines: List[Dict], group_lines: int, step: int = 1) -> List[PoemLine]:
+def _poemlines_from_textlines_automatic(config: Dict[str, Any], text_lines: List[Dict], group_lines: int) -> List[PoemLine]:
 
     beginning = Beginning(config.get("beginningLine", "[البداية]"))
     lines: List[PoemLine] = []
@@ -264,6 +292,33 @@ def _poemlines_from_textlines_automatic(config: Dict[str, Any], text_lines: List
             lines.append(poem_line)
             pred.successor = poem_line
             pred = poem_line
+    return lines
+
+
+def _poemlines_from_textlines_by_section(config: Dict[str, Any], text_lines: List[Dict]) -> List[PoemLine]:
+
+    beginning = Beginning(config.get("beginningLine", "[البداية]"))
+    lines: Tuple[int, List[PoemLine]] = []
+    pred: PoemLine = beginning
+    poem_line: PoemLine
+
+    def get_section_lines():
+        cur_subtitle = text_lines["subtitles"][0]
+        section_lines_count = 0
+        for i in range(len(text_lines["verses"])):
+            if cur_subtitle != text_lines["subtitles"][i]:
+                yield (cur_subtitle, text_lines["verses"][i-section_lines_count:i])
+                cur_subtitle = text_lines["subtitles"][i]
+                section_lines_count = 0
+            section_lines_count += 1
+        yield (cur_subtitle, text_lines["verses"][i-section_lines_count+1:])
+
+    for subtitle, section_lines in get_section_lines():
+        print(f"subtitle = {subtitle}, section_lines = {section_lines}")
+        poem_line = PoemSection(section_lines, pred, subtitle)
+        lines.append((len(section_lines), poem_line))
+        pred.successor = poem_line
+        pred = poem_line
     return lines
 
 
@@ -338,7 +393,7 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
               title: str, tags: List[str], text: List[str], deck_id: int,
               context_lines: int, group_lines: int, recite_lines: int, step: int = 1,
               media: List[str] = [],
-              automatic: bool = False):
+              mode: ImportMode = ImportMode.CUSTOM):
     """
     Generate notes from the given title, tags, poem text, and number of
     lines of context. Return the number of notes added.
@@ -351,17 +406,25 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
     """
     added = 0
     model = col.models.byName("ARLPCG 1.0")
-    if not automatic:
+    if mode == ImportMode.CUSTOM:
         for line in _poemlines_from_textlines(config, text, group_lines, step)[0::step]:
             n = note_constructor(col, model)
             line.populate_note(n, title, tags, context_lines, recite_lines, deck_id, step, media)
             col.addNote(n)
             added += 1
-    else:
+    elif mode == ImportMode.AUTOMATIC:
         parsed = detect_format_and_parse("\n".join(text))
-        for line in _poemlines_from_textlines_automatic(config, parsed, group_lines, step)[0::step]:
+        for line in _poemlines_from_textlines_automatic(config, parsed, group_lines)[0::step]:
             n = note_constructor(col, model)
             line.populate_note(n, parsed['title'], tags, context_lines, recite_lines, deck_id, step, media)
+            col.addNote(n)
+            added += 1
+    elif mode == ImportMode.BY_SECTION:
+        parsed = detect_format_and_parse("\n".join(text))
+        for section_lines, line in _poemlines_from_textlines_by_section(config, parsed):
+            print(f"section_lines = {section_lines}, line.text = {line.text_lines}")
+            n = note_constructor(col, model)
+            line.populate_note(n, parsed['title'], tags, 0, section_lines, deck_id, 1, media)
             col.addNote(n)
             added += 1
 

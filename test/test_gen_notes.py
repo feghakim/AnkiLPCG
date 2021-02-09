@@ -176,7 +176,7 @@ def mock_note():
     group_lines = 1
     step = 1
     media = []
-    automatic = False
+    mode = ImportMode.CUSTOM
     text = cleanse_text(test_poem, MOCK_CLEANSE_CONFIG)
     return dict(locals())
 
@@ -520,7 +520,7 @@ def test_render_automatic(mock_note):
     mock_note['step'] = 3
     mock_note['title'] = 'مَتْنُ نَظْمِ الْآجُرٌّومِيَّة'
     mock_note['text'] = cleanse_text(automatic_test_poem, MOCK_CLEANSE_CONFIG)
-    mock_note['automatic'] = True
+    mock_note['mode'] = ImportMode.AUTOMATIC
     num_added = add_notes(**mock_note)
 
     assert num_added == 6
@@ -559,7 +559,7 @@ def test_render_automatic_groups(mock_note):
     mock_note['context_lines'] = 1
     mock_note['title'] = 'مَتْنُ نَظْمِ الْآجُرٌّومِيَّة'
     mock_note['text'] = cleanse_text(automatic_test_poem, MOCK_CLEANSE_CONFIG)
-    mock_note['automatic'] = True
+    mock_note['mode'] = ImportMode.AUTOMATIC
     num_added = add_notes(**mock_note)
 
     assert num_added == 9
@@ -586,7 +586,7 @@ def test_render_automatic_groups_with_steps(mock_note):
     mock_note['step'] = 2
     mock_note['title'] = 'مَتْنُ نَظْمِ الْآجُرٌّومِيَّة'
     mock_note['text'] = cleanse_text(automatic_test_poem, MOCK_CLEANSE_CONFIG)
-    mock_note['automatic'] = True
+    mock_note['mode'] = ImportMode.AUTOMATIC
     num_added = add_notes(**mock_note)
 
     assert num_added == 5
@@ -604,4 +604,53 @@ def test_render_automatic_groups_with_steps(mock_note):
     assert col.notes[3]['الأبيات'] == (
         "<p>13- الاِعْرَابُ تَغْييرُ أَوَاخِرِ الكَلِمْ ** تَقْدِيرًا اوْ لَفْظًا فَذَا الحَدَّ اغْتَنِم</p>"
         "<p>14- وَذَلِكَ التَّغْيِيرُ لاِضْطِرَابِ ** عَوَامِلٍ تَدْخُلُ لِلإِعْرَابِ</p>"
+    )
+
+def test_render_by_section(mock_note):
+
+    col = mock_note['col']
+    mock_note['title'] = 'مَتْنُ نَظْمِ الْآجُرٌّومِيَّة'
+    mock_note['text'] = cleanse_text(automatic_test_poem, MOCK_CLEANSE_CONFIG)
+    mock_note['mode'] = ImportMode.BY_SECTION
+    num_added = add_notes(**mock_note)
+
+    assert num_added == 3
+    assert len(col.notes) == 3
+
+    assert col.notes[0]['محث'] == "[...5]"
+    assert col.notes[1]['محث'] == "[...7]"
+    assert col.notes[2]['محث'] == "[...5]"
+
+    assert col.notes[0]['العنوان'] == mock_note['title']
+    assert col.notes[0]['الباب'] == ''
+    assert col.notes[1]['الباب'] == ''
+    assert col.notes[2]['الباب'] == ''
+
+    assert col.notes[0]['السياق'] == '<p></p>'
+    assert col.notes[1]['السياق'] == '<p>بَابُ الكَلاَمِ</p>'
+    assert col.notes[2]['السياق'] == '<p>بَابُ الإِعْرَابِ</p>'
+
+    assert col.notes[0]['الأبيات'] == (
+        "<p>1. قَـالَ عُبَيْدُ رَبِهِ مُحَـمَّدُ ** اللهَ فِي كُـلِّ الأُمُـورِ أَحْـمَد</p>"
+        "<p>2. مُصَلِّـيًا عَلَى الرَّسُولِ المُنْتَقَى ** وَآلِـهِ وَصَحْـبِهِ ذَوِي التُّـقَى</p>"
+        "<p>3. وَبَعْـدُ فَالقَصْـدُ بِذَا المَنْظُومِ ** تَسْهِيلُ مَنْـثُورِ ابْـنِ آجُـرُّومِ</p>"
+        "<p>4. لِـمَنْ أَرَادَ حِفْـظَهُ وَعَسُرَا ** عَلَيْهِ أَنْ يَحْـفَظَ مَـا قَـدْ نُثِرَا</p>"
+        "<p>5. واللهَ أَسْتَعِـينُ فِي كُلِّ عَمَلْ ** إِلَيْهِ قَصْـدِي وَعَلَـيْهِ المُتَّـكَلْ</p>"
+    )
+    assert col.notes[1]['الأبيات'] == (
+        "<p>6. إِنَّ الكَلاَمَ عِنْـدَنَا فَلْتَسْتَمِعْ ** لَفْظٌ مُـرَكَّبٌ مُفِـيدٌ قَـدْ وُضِعْ</p>"
+        "<p>7. أَقْسَـامُهُ الَّتِي عَـلَيْهَا يُبْنَى ** اِسْمٌ وَفِعْـلٌ ثُمَّ حَـرْفُ مَـعْنَى</p>"
+        "<p>8. فَالاِسْمُ بِالخَفْضِ وَبِالتَّنْوِينِ أَوْ ** دُخُولِ «أَلْ» يُعْرَفُ فَاقْفُ مَا قَفَوا</p>"
+        "<p>9. وَبِحُرُوفِ الخّفْضِ وَهْيَ مِنْ، إِلَى ** وَعَنْ، وَفِي، وَرُبَّ، وَالبَا، وَعَلَى</p>"
+        "<p>10.وَالكَافُ، والَّلاَمُ، وَوَاوٌ، وَالتَّا ** وَمُذْ، وَمُنْذُ، وَلَعَلّ، حَتَّى</p>"
+        "<p>11. وَالفِعْلُ بِالسِّينِ، وَسَوْفَ، وَبِقَدْ ** فَاعْلَمْ، وَتَا التَّأْنِيثِ، مَيْزُهُ وَرَدْ</p>"
+        "<p>12. وَالحَرْفُ يُعْـرَفُ بِأَلاَّ يَقْبَلاَ ** لاِسْمٍ وَلاَ فِعْلٍ دَلِيلاً كَـ «بَلَى»</p>"
+
+    )
+    assert col.notes[2]['الأبيات'] == (
+        "<p>13- الاِعْرَابُ تَغْييرُ أَوَاخِرِ الكَلِمْ ** تَقْدِيرًا اوْ لَفْظًا فَذَا الحَدَّ اغْتَنِم</p>"
+        "<p>14- وَذَلِكَ التَّغْيِيرُ لاِضْطِرَابِ ** عَوَامِلٍ تَدْخُلُ لِلإِعْرَابِ</p>"
+        "<p>15- أقْسَامُهُ أَرْبَعَةٌ تُؤَمُّ ** رَفْـعٌ، وَنَصْـبٌ، ثُمَّ خَفْضٌ، جَـزْمُ</p>"
+        "<p>16- فَالأَوَّلاَنِ دُونَ رَيْبٍ وَقَعَا ** فِي الاِسْمِ وَالفِعْلِ المُضَارِعِ مَعَا</p>"
+        "<p>17- وَالاِسْمُ قَدْ خُصِّصَ بِالخّفْضِ كَمَا ** قَدْ خُصِّصَ الفِعْلُ بِجَزْمٍ فَاعْلَمَاX</p>"
     )
