@@ -176,6 +176,7 @@ def mock_note():
     group_lines = 1
     step = 1
     media = []
+    distribute_media = False
     mode = ImportMode.CUSTOM
     text = cleanse_text(test_poem, MOCK_CLEANSE_CONFIG)
     return dict(locals())
@@ -654,3 +655,23 @@ def test_render_by_section(mock_note):
         "<p>16- فَالأَوَّلاَنِ دُونَ رَيْبٍ وَقَعَا ** فِي الاِسْمِ وَالفِعْلِ المُضَارِعِ مَعَا</p>"
         "<p>17- وَالاِسْمُ قَدْ خُصِّصَ بِالخّفْضِ كَمَا ** قَدْ خُصِّصَ الفِعْلُ بِجَزْمٍ فَاعْلَمَاX</p>"
     )
+
+def test_render_media(mock_note):
+
+    col = mock_note['col']
+    mock_note['title'] = 'مَتْنُ نَظْمِ الْآجُرٌّومِيَّة'
+    mock_note['text'] = cleanse_text(automatic_test_poem, MOCK_CLEANSE_CONFIG)
+    mock_note['mode'] = ImportMode.BY_SECTION
+    mock_note['media'] = ['1.mp3', '2.mp3', '3.mp3']
+    num_added = add_notes(**mock_note)
+
+    assert col.notes[0]['وسائط'] == '1.mp32.mp33.mp3'
+    assert col.notes[1]['وسائط'] == '1.mp32.mp33.mp3'
+    assert col.notes[2]['وسائط'] == '1.mp32.mp33.mp3'
+
+    col.notes = []
+    mock_note['distribute_media'] = True
+    num_added = add_notes(**mock_note)
+    assert col.notes[0]['وسائط'] == '1.mp3'
+    assert col.notes[1]['وسائط'] == '2.mp3'
+    assert col.notes[2]['وسائط'] == '3.mp3'

@@ -86,7 +86,7 @@ class LPCGDialog(QDialog):
         try:
             notes_generated = add_notes(self.mw.col, config, Note, title, tags, text, did,
                                         context_lines, group_lines, recite_lines, step, self.media,
-                                        mode)
+                                        self.form.MediaByNoteRadioButton.isChecked(), mode)
         except KeyError as e:
             showWarning(
                 "تعذر إيجاد حقل {field} في نوع ملحوظة {name} في مجموعتك. "

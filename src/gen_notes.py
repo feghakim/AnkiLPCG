@@ -314,7 +314,6 @@ def _poemlines_from_textlines_by_section(config: Dict[str, Any], text_lines: Lis
         yield (cur_subtitle, text_lines["verses"][i-section_lines_count+1:])
 
     for subtitle, section_lines in get_section_lines():
-        print(f"subtitle = {subtitle}, section_lines = {section_lines}")
         poem_line = PoemSection(section_lines, pred, subtitle)
         lines.append((len(section_lines), poem_line))
         pred.successor = poem_line
@@ -392,7 +391,7 @@ def detect_format_and_parse(text: str):
 def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
               title: str, tags: List[str], text: List[str], deck_id: int,
               context_lines: int, group_lines: int, recite_lines: int, step: int = 1,
-              media: List[str] = [],
+              media: List[str] = [], distribute_media: bool = False,
               mode: ImportMode = ImportMode.CUSTOM):
     """
     Generate notes from the given title, tags, poem text, and number of
@@ -404,27 +403,33 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
     happen a couple times when users accidentally edited the note type. The
     caller should offer an appropriate error message in this case.
     """
+
+    def choose_media(i: int) -> List[str]:
+        if not distribute_media:
+            return media
+        else:
+            return media[i:i+1]
+
     added = 0
     model = col.models.byName("ARLPCG 1.0")
     if mode == ImportMode.CUSTOM:
         for line in _poemlines_from_textlines(config, text, group_lines, step)[0::step]:
             n = note_constructor(col, model)
-            line.populate_note(n, title, tags, context_lines, recite_lines, deck_id, step, media)
+            line.populate_note(n, title, tags, context_lines, recite_lines, deck_id, step, choose_media(added))
             col.addNote(n)
             added += 1
     elif mode == ImportMode.AUTOMATIC:
         parsed = detect_format_and_parse("\n".join(text))
         for line in _poemlines_from_textlines_automatic(config, parsed, group_lines)[0::step]:
             n = note_constructor(col, model)
-            line.populate_note(n, parsed['title'], tags, context_lines, recite_lines, deck_id, step, media)
+            line.populate_note(n, parsed['title'], tags, context_lines, recite_lines, deck_id, step, choose_media(added))
             col.addNote(n)
             added += 1
     elif mode == ImportMode.BY_SECTION:
         parsed = detect_format_and_parse("\n".join(text))
         for section_lines, line in _poemlines_from_textlines_by_section(config, parsed):
-            print(f"section_lines = {section_lines}, line.text = {line.text_lines}")
             n = note_constructor(col, model)
-            line.populate_note(n, parsed['title'], tags, 0, section_lines, deck_id, 1, media)
+            line.populate_note(n, parsed['title'], tags, 0, section_lines, deck_id, 1, choose_media(added))
             col.addNote(n)
             added += 1
 
