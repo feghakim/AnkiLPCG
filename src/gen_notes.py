@@ -368,7 +368,7 @@ def parse_text(pattern, text):
     first = next(it, None)
     if not first:
         return None
-    ret['title'] = first.group("title")
+    ret['title'] = first.group("title").split('\n')[0].strip()
     ret['verses'] = []
     ret['subtitles'] = []
     for l in first.group("verses").split('\n'):
@@ -380,12 +380,12 @@ def parse_text(pattern, text):
         for l in d['verses'].split('\n'):
             if l.strip() != '':
                 ret['verses'].append(l)
-                ret['subtitles'].append(d['title'])
+                ret['subtitles'].append(d['title'].strip())
 
     return ret
 
 def detect_format_and_parse(text: str):
-    return parse_text(r"(?P<title>.*)\n(?P<verses>(\d+[.-].*\n?)+)", text)
+    return parse_text(r"(?P<title>(.*\n)*?)(?P<verses>(\d+[.-].*\n?)+)", text)
 
 
 def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
