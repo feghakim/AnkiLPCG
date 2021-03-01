@@ -362,37 +362,33 @@ def cleanse_text(string: str, config: Dict[str, Any]) -> List[str]:
     return text
 
 
-def parse_text(pattern, text):
-    ret = {}
-    it = re.finditer(pattern, text, re.MULTILINE)
-    first = next(it, None)
-    if not first:
-        return None
-    ret['title'] = first.group("title").split('\n')[0].strip()
-    ret['verses'] = []
-    ret['subtitles'] = []
-    for l in first.group("verses").split('\n'):
-        if l.strip() != '':
-            ret['verses'].append(l)
-            ret['subtitles'].append('')
-    for m in it:
-        d = m.groupdict()
-        for l in d['verses'].split('\n'):
-            if l.strip() != '':
-                ret['verses'].append(l)
-                ret['subtitles'].append(d['title'].strip())
+def automatic_parse_text(lines: List[str], caesura: str):
+	ret = {}
+	#FIXME: maybe use the typed title if there is no one in the poem text?
+    ret['title'] = lines[0]
+	i = 1
+	# skip intro
+	while i < len(lines) and caesura not in lines[i]:
+		i += 1
 
-    return ret
-
-def detect_format_and_parse(text: str):
-    return parse_text(r"(?P<title>(.*\n)*?)(?P<verses>(\d+[.-].*\n?)+)", text)
+	ret['verses'] = []
+	ret['subtitles'] = []
+	cur_subtitle = ''
+	while i < len(lines):
+		if caesura not in lines[i]:
+			cur_subtitle = lines[i]
+		else:
+			ret['verses'].append(lines[i])
+			ret['subtitles'].append(cur_subtitle)
+		i += 1
+	return ret
 
 
 def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
               title: str, tags: List[str], text: List[str], deck_id: int,
               context_lines: int, group_lines: int, recite_lines: int, step: int = 1,
               media: List[str] = [], distribute_media: bool = False,
-              mode: ImportMode = ImportMode.CUSTOM):
+              mode: ImportMode = ImportMode.CUSTOM, caesura: str = ' '):
     """
     Generate notes from the given title, tags, poem text, and number of
     lines of context. Return the number of notes added.
@@ -419,14 +415,14 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
             col.addNote(n)
             added += 1
     elif mode == ImportMode.AUTOMATIC:
-        parsed = detect_format_and_parse("\n".join(text))
+        parsed = automatic_parse_text(text, caesura)
         for line in _poemlines_from_textlines_automatic(config, parsed, group_lines)[0::step]:
             n = note_constructor(col, model)
             line.populate_note(n, parsed['title'], tags, context_lines, recite_lines, deck_id, step, choose_media(added))
             col.addNote(n)
             added += 1
     elif mode == ImportMode.BY_SECTION:
-        parsed = detect_format_and_parse("\n".join(text))
+        parsed = automatic_parse_text(text, caesura)
         for section_lines, line in _poemlines_from_textlines_by_section(config, parsed):
             n = note_constructor(col, model)
             line.populate_note(n, parsed['title'], tags, 0, section_lines, deck_id, 1, choose_media(added))

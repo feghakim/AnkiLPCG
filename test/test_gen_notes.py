@@ -178,6 +178,7 @@ def mock_note():
     media = []
     distribute_media = False
     mode = ImportMode.CUSTOM
+    caesura = '**'
     text = cleanse_text(test_poem, MOCK_CLEANSE_CONFIG)
     return dict(locals())
 
@@ -678,3 +679,19 @@ def test_render_media(mock_note):
     assert col.notes[0]['وسائط'] == '1.mp3'
     assert col.notes[1]['وسائط'] == '2.mp3'
     assert col.notes[2]['وسائط'] == '3.mp3'
+
+def test_parse_custom_caesura():
+
+    parsed = automatic_parse_text(cleanse_text(automatic_test_poem.replace("**", "//"), MOCK_CLEANSE_CONFIG), "//")
+    assert parsed['title'] == "مَتْنُ نَظْمِ الْآجُرٌّومِيَّة"
+    for i in range(5):
+        assert parsed['subtitles'][i] == ''
+    for i in range(5, 12):
+        assert parsed['subtitles'][i] == 'بَابُ الكَلاَمِ'
+    for i in range(12, 17):
+        assert parsed['subtitles'][i] == 'بَابُ الإِعْرَابِ'
+
+    assert parsed['verses'][0] == '1. قَـالَ عُبَيْدُ رَبِهِ مُحَـمَّدُ // اللهَ فِي كُـلِّ الأُمُـورِ أَحْـمَد'
+    assert parsed['verses'][5] == '6. إِنَّ الكَلاَمَ عِنْـدَنَا فَلْتَسْتَمِعْ // لَفْظٌ مُـرَكَّبٌ مُفِـيدٌ قَـدْ وُضِعْ'
+    assert parsed['verses'][12] == '13- الاِعْرَابُ تَغْييرُ أَوَاخِرِ الكَلِمْ // تَقْدِيرًا اوْ لَفْظًا فَذَا الحَدَّ اغْتَنِم'
+    assert parsed['verses'][16] == '17- وَالاِسْمُ قَدْ خُصِّصَ بِالخّفْضِ كَمَا // قَدْ خُصِّصَ الفِعْلُ بِجَزْمٍ فَاعْلَمَاX'

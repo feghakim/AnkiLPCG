@@ -86,7 +86,8 @@ class LPCGDialog(QDialog):
         try:
             notes_generated = add_notes(self.mw.col, config, Note, title, tags, text, did,
                                         context_lines, group_lines, recite_lines, step, self.media,
-                                        self.form.MediaByNoteRadioButton.isChecked(), mode)
+                                        self.form.MediaByNoteRadioButton.isChecked(), mode,
+                                        self.form.caesura.text())
         except KeyError as e:
             showWarning(
                 "تعذر إيجاد حقل {field} في نوع ملحوظة {name} في مجموعتك. "
@@ -113,6 +114,7 @@ class LPCGDialog(QDialog):
         if checked:
             self.form.bySectionCheckBox.setChecked(False)
         self.form.titleBox.setEnabled(not self.form.titleBox.isEnabled())
+        self.updateCaesuraInputState()
 
     def onBySection(self, checked: bool):
         if checked:
@@ -122,6 +124,13 @@ class LPCGDialog(QDialog):
         self.form.reciteLinesSpin.setEnabled(not self.form.reciteLinesSpin.isEnabled())
         self.form.contextLinesSpin.setEnabled(not self.form.contextLinesSpin.isEnabled())
         self.form.groupLinesSpin.setEnabled(not self.form.groupLinesSpin.isEnabled())
+        self.updateCaesuraInputState()
+
+    def updateCaesuraInputState(self):
+        if self.form.automaticCheckBox.isChecked() or self.form.bySectionCheckBox.isChecked():
+            self.form.caesura.setEnabled(True)
+        else:
+            self.form.caesura.setEnabled(False)
 
     def onMedia(self):
         filenames = getFile(self, "استيراد وسائط", None, key="import", multi=True)
