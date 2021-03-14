@@ -15,7 +15,7 @@ from anki.notes import Note
 
 
 from . import import_dialog as lpcg_form
-from .gen_notes import add_notes, cleanse_text, ImportMode
+from .gen_notes import MediaImportMode, add_notes, cleanse_text, ImportMode
 from . import models
 
 
@@ -86,7 +86,7 @@ class LPCGDialog(QDialog):
         try:
             notes_generated = add_notes(self.mw.col, config, Note, title, tags, text, did,
                                         context_lines, group_lines, recite_lines, step, self.media,
-                                        self.form.MediaByNoteRadioButton.isChecked(), mode,
+                                        self.getMediaImportMode(), mode,
                                         self.form.caesura.text())
         except KeyError as e:
             showWarning(
@@ -131,6 +131,14 @@ class LPCGDialog(QDialog):
             self.form.caesura.setEnabled(True)
         else:
             self.form.caesura.setEnabled(False)
+
+    def getMediaImportMode(self) -> MediaImportMode:
+        if self.form.MediaByNoteRadioButton.isChecked():
+            return MediaImportMode.ONE_FOR_EACH_NOTE
+        elif self.form.MediaByReciteLinesRadioButton.isChecked():
+            return MediaImportMode.BY_RECITE_LINES
+        else:
+            return MediaImportMode.BULK
 
     def onMedia(self):
         filenames = getFile(self, "استيراد وسائط", None, key="import", multi=True)

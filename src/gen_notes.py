@@ -8,12 +8,6 @@ if TYPE_CHECKING:
     from anki.notes import Note
 
 
-class ImportMode(Enum):
-    CUSTOM = auto()
-    AUTOMATIC = auto()
-    BY_SECTION = auto()
-
-
 class PoemLine:
     def __init__(self) -> None:
         self.predecessor = self  # so it's the right type...
@@ -363,31 +357,42 @@ def cleanse_text(string: str, config: Dict[str, Any]) -> List[str]:
 
 
 def automatic_parse_text(lines: List[str], caesura: str):
-	ret = {}
-	#FIXME: maybe use the typed title if there is no one in the poem text?
+    ret = {}
+    #FIXME: maybe use the typed title if there is no one in the poem text?
     ret['title'] = lines[0]
-	i = 1
-	# skip intro
-	while i < len(lines) and caesura not in lines[i]:
-		i += 1
+    i = 1
+    # skip intro
+    while i < len(lines) and caesura not in lines[i]:
+        i += 1
 
-	ret['verses'] = []
-	ret['subtitles'] = []
-	cur_subtitle = ''
-	while i < len(lines):
-		if caesura not in lines[i]:
-			cur_subtitle = lines[i]
-		else:
-			ret['verses'].append(lines[i])
-			ret['subtitles'].append(cur_subtitle)
-		i += 1
-	return ret
+    ret['verses'] = []
+    ret['subtitles'] = []
+    cur_subtitle = ''
+    while i < len(lines):
+        if caesura not in lines[i]:
+            cur_subtitle = lines[i]
+        else:
+            ret['verses'].append(lines[i])
+            ret['subtitles'].append(cur_subtitle)
+        i += 1
+    return ret
+
+
+class ImportMode(Enum):
+    CUSTOM = auto()
+    AUTOMATIC = auto()
+    BY_SECTION = auto()
+
+class MediaImportMode(Enum):
+    BULK = auto()
+    ONE_FOR_EACH_NOTE = auto()
+    BY_RECITE_LINES = auto()
 
 
 def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
               title: str, tags: List[str], text: List[str], deck_id: int,
               context_lines: int, group_lines: int, recite_lines: int, step: int = 1,
-              media: List[str] = [], distribute_media: bool = False,
+              media: List[str] = [], media_mode: MediaImportMode = MediaImportMode.BULK,
               mode: ImportMode = ImportMode.CUSTOM, caesura: str = ' '):
     """
     Generate notes from the given title, tags, poem text, and number of
@@ -400,32 +405,36 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
     caller should offer an appropriate error message in this case.
     """
 
-    def choose_media(i: int) -> List[str]:
-        if not distribute_media:
+    def choose_media(i: int, recite_lines: int) -> List[str]:
+        if media_mode == MediaImportMode.BULK:
             return media
-        else:
+        elif media_mode == MediaImportMode.ONE_FOR_EACH_NOTE:
             return media[i:i+1]
+        elif media_mode == MediaImportMode.BY_RECITE_LINES:
+            return media[i:i+recite_lines]
+        else:
+            raise Exception("unhandled media import mode")
 
     added = 0
     model = col.models.byName("ARLPCG 1.0")
     if mode == ImportMode.CUSTOM:
         for line in _poemlines_from_textlines(config, text, group_lines, step)[0::step]:
             n = note_constructor(col, model)
-            line.populate_note(n, title, tags, context_lines, recite_lines, deck_id, step, choose_media(added))
+            line.populate_note(n, title, tags, context_lines, recite_lines, deck_id, step, choose_media(added, recite_lines))
             col.addNote(n)
             added += 1
     elif mode == ImportMode.AUTOMATIC:
         parsed = automatic_parse_text(text, caesura)
         for line in _poemlines_from_textlines_automatic(config, parsed, group_lines)[0::step]:
             n = note_constructor(col, model)
-            line.populate_note(n, parsed['title'], tags, context_lines, recite_lines, deck_id, step, choose_media(added))
+            line.populate_note(n, parsed['title'], tags, context_lines, recite_lines, deck_id, step, choose_media(added, recite_lines))
             col.addNote(n)
             added += 1
     elif mode == ImportMode.BY_SECTION:
         parsed = automatic_parse_text(text, caesura)
         for section_lines, line in _poemlines_from_textlines_by_section(config, parsed):
             n = note_constructor(col, model)
-            line.populate_note(n, parsed['title'], tags, 0, section_lines, deck_id, 1, choose_media(added))
+            line.populate_note(n, parsed['title'], tags, 0, section_lines, deck_id, 1, choose_media(added, section_lines))
             col.addNote(n)
             added += 1
 

@@ -179,14 +179,21 @@
        </property>
      </widget>
    </item>
-   <item row="15" column="0">
+   <item row="15" column="1">
+     <widget class="QRadioButton" name="MediaByReciteLinesRadioButton">
+       <property name="text">
+         <string>توزيع الوسائط حسب عدد السطور المراد حفظها</string>
+       </property>
+     </widget>
+   </item>
+   <item row="16" column="0">
      <widget class="QLabel" name="caesuraLabel">
        <property name="text">
          <string>الرموز الفاصلة بين كل شطر من البيت</string>
        </property>
      </widget>
    </item>
-   <item row="15" column="1">
+   <item row="16" column="1">
      <widget class="QLineEdit" name="caesura">
        <property name="text">
          <string>**</string>

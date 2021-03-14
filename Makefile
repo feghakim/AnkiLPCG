@@ -1,4 +1,4 @@
-.PHONY: all docs forms zip ankiweb clean
+.PHONY: all docs forms zip addon clean
 
 all: docs forms zip
 docs:
@@ -15,7 +15,7 @@ build.zip: src/*
 	rm -rf src/__pycache__
 	( cd src/; zip -r ../$@ * )
 
-ankiweb: zip
+addon: zip
 	cp build.zip arlpcg.ankiaddon
 
 clean:
