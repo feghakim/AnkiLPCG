@@ -31,8 +31,6 @@ import sys
 import aqt
 from aqt.utils import askUser, showInfo
 from anki.consts import MODEL_CLOZE
-from anki.models import Template as AnkiTemplate
-from anki.models import NoteType as AnkiModel
 
 
 class TemplateData(ABC):
@@ -44,7 +42,7 @@ class TemplateData(ABC):
     back: str
 
     @classmethod
-    def to_template(cls) -> AnkiTemplate:
+    def to_template(cls) -> Dict:
         "Create and return an Anki template object for this model definition."
         assert aqt.mw is not None, "Tried to use models before Anki is initialized!"
         mm = aqt.mw.col.models
@@ -65,10 +63,10 @@ class ModelData(ABC):
     sort_field: str
     is_cloze: bool
     version: str
-    upgrades: Tuple[Tuple[str, str, Callable[[AnkiModel], None]], ...]
+    upgrades: Tuple[Tuple[str, str, Callable[[Dict], None]], ...]
 
     @classmethod
-    def to_model(cls) -> Tuple[AnkiModel, str]:
+    def to_model(cls) -> Tuple[Dict, str]:
         """
         Create and return a pair of (Anki model object, version spec)
         for this model definition.
@@ -248,7 +246,7 @@ class LpcgOne(ModelData):
     sort_field = "الرقم"
     is_cloze = False
     version = "1.0.0"
-    upgrades = tuple()
+    upgrades: Tuple[Tuple[str, str, Callable[[Dict], None]], ...] = tuple()
 
 
 def ensure_note_type() -> None:

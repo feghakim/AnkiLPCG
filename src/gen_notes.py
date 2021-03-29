@@ -165,7 +165,7 @@ class GroupedLine(PoemLine):
         /E
         \F
     """
-    def __init__(self, text: List[str], predecessor: 'PoemLine', subtitle: Iterable = '') -> None:
+    def __init__(self, text: List[str], predecessor: 'PoemLine', subtitle = '') -> None:
         super().__init__()
         self.text_lines = text
         self.predecessor = predecessor
@@ -240,7 +240,7 @@ def groups_of_n(iterable: Iterable, n: int) -> Iterable:
     return zip_longest(*[iter(iterable)]*n)
 
 
-def _poemlines_from_textlines(config: Dict[str, Any], text_lines: List[str], group_lines: int, step: int = 1) -> List[PoemLine]:
+def _poemlines_from_textlines(config: Dict[str, Any], text_lines: List[str], group_lines: int) -> List[PoemLine]:
     """
     Given a list of cleansed text lines, create a list of PoemLine objects
     from it. These are each capable of constructing a correct note testing
@@ -253,20 +253,20 @@ def _poemlines_from_textlines(config: Dict[str, Any], text_lines: List[str], gro
 
     if group_lines == 1:
         for text_line in text_lines:
-            poem_line = SingleLine(text_line, pred, step)
+            poem_line = SingleLine(text_line, pred)
             lines.append(poem_line)
             pred.successor = poem_line
             pred = poem_line
     else:
         for line_set in groups_of_n(text_lines, group_lines):
-            poem_line = GroupedLine([i for i in line_set if i is not None], pred, step)
+            poem_line = GroupedLine([i for i in line_set if i is not None], pred)
             lines.append(poem_line)
             pred.successor = poem_line
             pred = poem_line
     return lines
 
 
-def _poemlines_from_textlines_automatic(config: Dict[str, Any], text_lines: List[Dict], group_lines: int) -> List[PoemLine]:
+def _poemlines_from_textlines_automatic(config: Dict[str, Any], text_lines: Dict, group_lines: int) -> List[PoemLine]:
 
     beginning = Beginning(config.get("beginningLine", "[البداية]"))
     lines: List[PoemLine] = []
@@ -289,10 +289,10 @@ def _poemlines_from_textlines_automatic(config: Dict[str, Any], text_lines: List
     return lines
 
 
-def _poemlines_from_textlines_by_section(config: Dict[str, Any], text_lines: List[Dict]) -> List[PoemLine]:
+def _poemlines_from_textlines_by_section(config: Dict[str, Any], text_lines: Dict) -> List[Tuple[int, PoemLine]]:
 
     beginning = Beginning(config.get("beginningLine", "[البداية]"))
-    lines: Tuple[int, List[PoemLine]] = []
+    lines: List[Tuple[int, PoemLine]] = []
     pred: PoemLine = beginning
     poem_line: PoemLine
 
@@ -356,8 +356,8 @@ def cleanse_text(string: str, config: Dict[str, Any]) -> List[str]:
     return text
 
 
-def automatic_parse_text(lines: List[str], caesura: str):
-    ret = {}
+def automatic_parse_text(lines: List[str], caesura: str) -> Dict:
+    ret: Dict = {}
     #FIXME: maybe use the typed title if there is no one in the poem text?
     ret['title'] = lines[0]
     i = 1
@@ -418,7 +418,7 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
     added = 0
     model = col.models.byName("ARLPCG 1.0")
     if mode == ImportMode.CUSTOM:
-        for line in _poemlines_from_textlines(config, text, group_lines, step)[0::step]:
+        for line in _poemlines_from_textlines(config, text, group_lines)[0::step]:
             n = note_constructor(col, model)
             line.populate_note(n, title, tags, context_lines, recite_lines, deck_id, step, choose_media(added, recite_lines))
             col.addNote(n)
