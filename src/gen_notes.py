@@ -361,9 +361,6 @@ def automatic_parse_text(lines: List[str], caesura: str) -> Dict:
     #FIXME: maybe use the typed title if there is no one in the poem text?
     ret['title'] = lines[0]
     i = 1
-    # skip intro
-    while i < len(lines) and caesura not in lines[i]:
-        i += 1
 
     ret['verses'] = []
     ret['subtitles'] = []
