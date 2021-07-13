@@ -21,7 +21,7 @@ if 'pytest' not in sys.modules:
 
     def open_dialog():
         "Launch the add-poem dialog."
-        current_version = aqt.mw.col.get_config('lpcg_model_version', default="none")
+        current_version = aqt.mw.col.get_config('arlpcg_model_version', default="none")
         if not models.LpcgOne.is_at_version(current_version):
             showWarning(
                 "نوع ملحوظة ARLPCG الخاص بك قديم ويجب ترقيته "

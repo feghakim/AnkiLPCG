@@ -3,6 +3,7 @@ import re
 import math
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, TYPE_CHECKING
 from enum import Enum, auto
+from collections import deque
 
 if TYPE_CHECKING:
     from anki.notes import Note
@@ -29,6 +30,7 @@ class PoemLine:
         note['السياق'] = self._format_context(context_lines)
         note['الأبيات'] = self._format_text(recite_lines)
         note['وسائط'] = self._format_media(media)
+        note['كامل المنظومة'] = self._format_whole_poem()
         prompt = self._get_prompt(recite_lines)
         if prompt is not None:
             note['محث'] = prompt
@@ -79,6 +81,43 @@ class PoemLine:
         could plausibly be used for other things as well in the future.
         """
         raise NotImplementedError
+
+    def _format_whole_poem(self) -> str:
+
+        def format_current_line(text):
+            return f'<p id="current">{text}</p>'
+
+        def format_line(text):
+            return f'<p>{text}</p>'
+
+        lines = deque()
+        def add_line(poemline, funcname='append', current=False):
+            if hasattr(poemline, 'text'):
+                if current:
+                    getattr(lines, funcname)(format_current_line(poemline.text))
+                else:
+                    getattr(lines, funcname)(format_line(poemline.text))
+            else:
+                group_lines = []
+                if current:
+                    group_lines.append(format_current_line(poemline.text_lines[0]))
+                else:
+                    group_lines.append(format_line(poemline.text_lines[0]))
+                for line in poemline.text_lines[1:]:
+                    group_lines.append(format_line(line))
+                getattr(lines, funcname)('\n'.join(group_lines))
+
+        add_line(self, 'appendleft', current=True)
+        cur = self.predecessor
+        while not isinstance(cur, Beginning):
+            add_line(cur, 'appendleft')
+            cur = cur.predecessor
+        cur = self.successor
+        while cur is not None:
+            add_line(cur)
+            cur = cur.successor
+
+        return '\n'.join(lines)
 
 
 class Beginning(PoemLine):

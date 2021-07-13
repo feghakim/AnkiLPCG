@@ -22,11 +22,8 @@ presented in slightly altered form here. The third project should combine the
 two versions and create a standardized system!
 """
 from abc import ABC
-import inspect
-import re
 from textwrap import dedent
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type
-import sys
+from typing import Callable, Dict, Tuple, Type
 
 import aqt
 from aqt.utils import askUser, showInfo
@@ -143,6 +140,35 @@ class ModelData(ABC):
         return current_version == cls.version
 
 
+def upgrade_oneohoh_to_oneoneoh(mod):
+    "Upgrade ARLPCG model from 1.0.0 to version 1.1.0."
+    mm = aqt.mw.col.models
+    mm.addField(mod, mm.newField('كامل المنظومة'))
+
+    mod['tmpls'][0]['afmt'] += dedent('''
+    <div class="alert extra">
+        {{#كامل المنظومة}}
+            <div id="hintlink" style="display:none">{{كامل المنظومة}}</div>
+            <a href="#" id="show-all">كامل المنظومة</a>
+            <br>
+        {{/كامل المنظومة}}
+    </div>
+
+    <script>
+        (function () {
+            let hintLink = document.getElementById('hintlink');
+            let showAllLink = document.getElementById('show-all');
+            showAllLink.addEventListener('click', (e) => {
+                showAllLink.style.display = 'none';
+                hintLink.style.display = 'block';
+                document.getElementById('current').scrollIntoView({behavior: "smooth", inline: "start"});
+                e.preventDefault();
+            });
+        })();
+    </script>
+    ''').strip()
+
+
 class LpcgOne(ModelData):
     class LpcgOneTemplate(TemplateData):
         name = "ARLPCG1"
@@ -164,10 +190,30 @@ class LpcgOne(ModelData):
                 <div class="extra">{{إضافي}}</div>
             {{/إضافي}}
             <div>{{وسائط}}</div>
+            <div class="alert extra">
+                {{#كامل المنظومة}}
+                    <div id="hintlink" style="display:none">{{كامل المنظومة}}</div>
+                    <a href="#" id="show-all">كامل المنظومة</a>
+                    <br>
+                {{/كامل المنظومة}}
+             </div>
+
+            <script>
+                (function () {
+                    let hintLink = document.getElementById('hintlink');
+                    let showAllLink = document.getElementById('show-all');
+                    showAllLink.addEventListener('click', (e) => {
+                        showAllLink.style.display = 'none';
+                        hintLink.style.display = 'block';
+                        document.getElementById('current').scrollIntoView({behavior: "smooth", inline: "start"});
+                        e.preventDefault();
+                    });
+                })();
+            </script>
         """
 
     name = "ARLPCG 1.0"
-    fields = ("الأبيات", "السياق", "العنوان", "الباب", "الرقم", "محث", "وسائط", "إضافي")
+    fields = ("الأبيات", "السياق", "العنوان", "الباب", "الرقم", "محث", "وسائط", "إضافي", "كامل المنظومة")
     templates = (LpcgOneTemplate,)
     styling = """
         .card {
@@ -245,8 +291,11 @@ class LpcgOne(ModelData):
     """
     sort_field = "الرقم"
     is_cloze = False
-    version = "1.0.0"
-    upgrades: Tuple[Tuple[str, str, Callable[[Dict], None]], ...] = tuple()
+    version = "1.1.0"
+    upgrades = (
+        ("none", "1.0.0", lambda m: None),
+        ("1.0.0", "1.1.0", upgrade_oneohoh_to_oneoneoh),
+    )
 
 
 def ensure_note_type() -> None:
@@ -259,27 +308,27 @@ def ensure_note_type() -> None:
     if not mod.in_collection():
         model_data, new_version = mod.to_model()
         aqt.mw.col.models.add(model_data)
-        aqt.mw.col.set_config('lpcg_model_version', new_version)
+        aqt.mw.col.set_config('arlpcg_model_version', new_version)
         return
 
     # "none": the "version number" pre-versioning
-    current_version = aqt.mw.col.get_config('lpcg_model_version', default="none")
+    current_version = aqt.mw.col.get_config('arlpcg_model_version', default="none")
     if mod.can_upgrade(current_version):
-        r = askUser("لاستيراد ملحوظات جديدة في إصدار ARLPCG هذا،"
+        r = askUser("لاستيراد ملحوظات جديدة في إصدار ARLPCG هذا، "
                     "يجب تحديث نوع ملحوظات ARLPCG الخاص بك. "
                     "قد يتطلب هذا مزامنة كاملة لمجموعتك بعد الاكتمال. "
                     "هل تريد تحديث نوع الملحوظة الآن؟ "
                     "إذا لم توافق، ستُسأل عندما تشغل أنكي المرة القادمة.")
         if r:
             new_version = mod.upgrade_from(current_version)
-            aqt.mw.col.set_config('lpcg_model_version', new_version)
+            aqt.mw.col.set_config('arlpcg_model_version', new_version)
             showInfo("تم تحديث نوع ملحوظة ARLPCG الخاص بك بنجاح. "
-                    "يرجى التأكد من أنك بطاقات ARLPCG الخاصة بك "
+                    "يرجى التأكد من أن بطاقات ARLPCG الخاصة بك "
                     "تظهر بشكل صحيح لكي تستطيع الاسترجاع من نسخة احتياطية "
                     "في حال كان هناك خطب ما.")
         return
 
-    assert mod.is_at_version(aqt.mw.col.get_config('lpcg_model_version')), \
+    assert mod.is_at_version(aqt.mw.col.get_config('arlpcg_model_version')), \
         "نوع ملحوظات ARLPCG الخاص بك قديم، لكنني لم أعثر على طريقة تحديث صالحة. " \
         "من المرجح أن تصادف مشاكل. " \
         "الرجاء التواصل مع المطور أو طلب الدعم لحل هذه المشكلة."
