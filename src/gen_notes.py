@@ -441,13 +441,14 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
     caller should offer an appropriate error message in this case.
     """
 
-    def choose_media(i: int, recite_lines: int) -> List[str]:
+    def choose_media(i: int, recite_lines: int, step: int = 1) -> List[str]:
+
         if media_mode == MediaImportMode.BULK:
             return media
         elif media_mode == MediaImportMode.ONE_FOR_EACH_NOTE:
-            return media[i:i+1]
+            return media[i*step:i*step+1]
         elif media_mode == MediaImportMode.BY_RECITE_LINES:
-            return media[i:i+recite_lines]
+            return media[i*step:i*step+recite_lines]
         else:
             raise Exception("unhandled media import mode")
 
@@ -456,14 +457,14 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
     if mode == ImportMode.CUSTOM:
         for line in _poemlines_from_textlines(config, text, group_lines)[0::step]:
             n = note_constructor(col, model)
-            line.populate_note(n, title, tags, context_lines, recite_lines, deck_id, step, choose_media(added, recite_lines))
+            line.populate_note(n, title, tags, context_lines, recite_lines, deck_id, step, choose_media(added, recite_lines, step))
             col.addNote(n)
             added += 1
     elif mode == ImportMode.AUTOMATIC:
         parsed = automatic_parse_text(text, caesura)
         for line in _poemlines_from_textlines_automatic(config, parsed, group_lines)[0::step]:
             n = note_constructor(col, model)
-            line.populate_note(n, parsed['title'], tags, context_lines, recite_lines, deck_id, step, choose_media(added, recite_lines))
+            line.populate_note(n, parsed['title'], tags, context_lines, recite_lines, deck_id, step, choose_media(added, recite_lines, step))
             col.addNote(n)
             added += 1
     elif mode == ImportMode.BY_SECTION:

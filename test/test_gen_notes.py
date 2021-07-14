@@ -683,6 +683,45 @@ def test_render_media(mock_note):
     for i in range(5):
         assert mock_note['media'][i] in col.notes[0]['وسائط']
 
+    # media distribution with custom step
+    col.notes = []
+    mock_note['media_mode'] = MediaImportMode.BY_RECITE_LINES
+    mock_note['mode'] = ImportMode.CUSTOM
+    mock_note['step'] = 3
+    mock_note['recite_lines'] = 2
+    num_added = add_notes(**mock_note)
+    assert '1.mp3' in col.notes[0]['وسائط']
+    assert '2.mp3' in col.notes[0]['وسائط']
+    assert '4.mp3' in col.notes[1]['وسائط']
+    assert '5.mp3' in col.notes[1]['وسائط']
+    assert '7.mp3' in col.notes[2]['وسائط']
+
+    # custom step + line groups
+    col.notes = []
+    mock_note['media_mode'] = MediaImportMode.ONE_FOR_EACH_NOTE
+    mock_note['mode'] = ImportMode.CUSTOM
+    mock_note['step'] = 3
+    mock_note['recite_lines'] = 2
+    mock_note['group_lines'] = 2
+    add_notes(**mock_note)
+    assert '1.mp3' in col.notes[0]['وسائط']
+    assert '4.mp3' in col.notes[1]['وسائط']
+    assert '7.mp3' in col.notes[2]['وسائط']
+
+    # custom step + line groups + media distribution by recitation lines
+    col.notes = []
+    mock_note['media_mode'] = MediaImportMode.BY_RECITE_LINES
+    mock_note['mode'] = ImportMode.CUSTOM
+    mock_note['step'] = 3
+    mock_note['recite_lines'] = 2
+    mock_note['group_lines'] = 2
+    add_notes(**mock_note)
+    assert '1.mp3' in col.notes[0]['وسائط']
+    assert '2.mp3' in col.notes[0]['وسائط']
+    assert '4.mp3' in col.notes[1]['وسائط']
+    assert '5.mp3' in col.notes[1]['وسائط']
+    assert '7.mp3' in col.notes[2]['وسائط']
+
 
 def test_parse_custom_caesura():
 
