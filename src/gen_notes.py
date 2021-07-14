@@ -446,9 +446,15 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
         if media_mode == MediaImportMode.BULK:
             return media
         elif media_mode == MediaImportMode.ONE_FOR_EACH_NOTE:
-            return media[i*step:i*step+1]
+            if mode == ImportMode.BY_SECTION:
+                return media[i:i+1]
+            else:
+                return media[i*step:i*step+1]
         elif media_mode == MediaImportMode.BY_RECITE_LINES:
-            return media[i*step:i*step+recite_lines]
+            if mode == ImportMode.BY_SECTION:
+                return media[i:i+recite_lines]
+            else:
+                return media[i*step:i*step+recite_lines]
         else:
             raise Exception("unhandled media import mode")
 
@@ -469,9 +475,12 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
             added += 1
     elif mode == ImportMode.BY_SECTION:
         parsed = automatic_parse_text(text, caesura)
+        media_added = 0
         for section_lines, line in _poemlines_from_textlines_by_section(config, parsed):
             n = note_constructor(col, model)
-            line.populate_note(n, parsed['title'], tags, 0, section_lines, deck_id, 1, choose_media(added, section_lines))
+            note_media = choose_media(media_added, section_lines)
+            media_added += len(note_media)
+            line.populate_note(n, parsed['title'], tags, 0, section_lines, deck_id, 1, note_media)
             col.addNote(n)
             added += 1
 

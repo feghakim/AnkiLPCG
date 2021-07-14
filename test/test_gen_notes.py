@@ -663,7 +663,11 @@ def test_render_media(mock_note):
     mock_note['title'] = 'مَتْنُ نَظْمِ الْآجُرٌّومِيَّة'
     mock_note['text'] = cleanse_text(automatic_test_poem, MOCK_CLEANSE_CONFIG)
     mock_note['mode'] = ImportMode.BY_SECTION
-    mock_note['media'] = ['1.mp3', '2.mp3', '3.mp3', '4.mp3', '5.mp3', '6.mp3', '7.mp3']
+    mock_note['media'] = [
+        '1.mp3', '2.mp3', '3.mp3', '4.mp3', '5.mp3',
+        '6.mp3', '7.mp3', '8.mp3', '9.mp3', '10.mp3',
+        '11.mp3', '12.mp3'
+    ]
     num_added = add_notes(**mock_note)
 
     assert col.notes[0]['وسائط'] == ''.join(mock_note['media'])
@@ -721,6 +725,24 @@ def test_render_media(mock_note):
     assert '4.mp3' in col.notes[1]['وسائط']
     assert '5.mp3' in col.notes[1]['وسائط']
     assert '7.mp3' in col.notes[2]['وسائط']
+
+    # media distribution by the number of lines of each section
+    col.notes = []
+    mock_note['media_mode'] = MediaImportMode.BY_RECITE_LINES
+    mock_note['mode'] = ImportMode.BY_SECTION
+    add_notes(**mock_note)
+    for i in range(1, 6):
+        assert f'{i}.mp3' in col.notes[0]['وسائط']
+    for i in range(6, 13):
+        assert f'{i}.mp3' in col.notes[1]['وسائط']
+
+    # one media file for each section
+    col.notes = []
+    mock_note['media_mode'] = MediaImportMode.ONE_FOR_EACH_NOTE
+    mock_note['mode'] = ImportMode.BY_SECTION
+    add_notes(**mock_note)
+    for i in range(len(col.notes)):
+        assert mock_note['media'][i] in col.notes[i]['وسائط']
 
 
 def test_parse_custom_caesura():
