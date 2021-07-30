@@ -264,6 +264,9 @@
        <property name="text">
         <string>&amp;إضافة ملحوظات</string>
        </property>
+       <property name="shortcut">
+        <string>Ctrl+Return</string>
+       </property>
        <property name="autoDefault">
         <bool>false</bool>
        </property>
