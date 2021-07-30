@@ -22,7 +22,7 @@ class PoemLine:
         """
         Fill the _note_ with content testing on the current line.
         """
-        note.model()['did'] = deck_id  # type: ignore
+        note.note_type()['did'] = deck_id  # type: ignore
         note.tags = tags
         note['العنوان'] = title
         note['الباب'] = self._format_subtitles(context_lines)
@@ -459,7 +459,7 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
             raise Exception("unhandled media import mode")
 
     added = 0
-    model = col.models.byName("ARLPCG 1.0")
+    model = col.models.by_name("ARLPCG 1.0")
     if mode == ImportMode.CUSTOM:
         for line in _poemlines_from_textlines(config, text, group_lines)[0::step]:
             n = note_constructor(col, model)

@@ -43,7 +43,7 @@ class TemplateData(ABC):
         "Create and return an Anki template object for this model definition."
         assert aqt.mw is not None, "Tried to use models before Anki is initialized!"
         mm = aqt.mw.col.models
-        t = mm.newTemplate(cls.name)
+        t = mm.new(cls.name)
         t['qfmt'] = dedent(cls.front).strip()
         t['afmt'] = dedent(cls.back).strip()
         return t
@@ -72,9 +72,9 @@ class ModelData(ABC):
         mm = aqt.mw.col.models
         model = mm.new(cls.name)
         for i in cls.fields:
-            field = mm.newField(i)
+            field = mm.new_field(i)
             field["rtl"] = True
-            mm.addField(model, field)
+            mm.add_field(model, field)
         for template in cls.templates:
             t = template.to_template()
             mm.addTemplate(model, t)
@@ -100,7 +100,7 @@ class ModelData(ABC):
         Returns the new version the model is at.
         """
         assert aqt.mw is not None, "Tried to use models before Anki is initialized!"
-        model = aqt.mw.col.models.byName(cls.name)
+        model = aqt.mw.col.models.by_name(cls.name)
 
         at_version = current_version
         for cur_ver, new_ver, func in cls.upgrades:
@@ -119,7 +119,7 @@ class ModelData(ABC):
         """
         assert aqt.mw is not None, "Tried to use models before Anki is initialized!"
         mm = aqt.mw.col.models
-        model = mm.byName(cls.name)
+        model = mm.by_name(cls.name)
         return model is not None
 
     @classmethod
@@ -143,7 +143,7 @@ class ModelData(ABC):
 def upgrade_oneohoh_to_oneoneoh(mod):
     "Upgrade ARLPCG model from 1.0.0 to version 1.1.0."
     mm = aqt.mw.col.models
-    mm.addField(mod, mm.newField('كامل المنظومة'))
+    mm.add_field(mod, mm.new_field('كامل المنظومة'))
 
     mod['tmpls'][0]['afmt'] += dedent('''
     <div class="alert extra">

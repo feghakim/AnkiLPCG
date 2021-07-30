@@ -61,7 +61,7 @@ class LPCGDialog(QDialog):
         if not title and mode == ImportMode.CUSTOM:
             showWarning("يجب أن تدخل عنوانًا لهذه القصيدة.")
             return
-        if self.mw.col.findNotes(f'"note:{models.LpcgOne.name}" "Title:{title}"'):  # pylint: disable=no-member
+        if self.mw.col.find_notes(f'"note:{models.LpcgOne.name}" "Title:{title}"'):  # pylint: disable=no-member
             showWarning("لديك بالفعل قصيدة بهذا العنوان في قاعدة البيانات. "
                         "الرجاء التحقق مما إذا كنت بالفعل قد أضفتها، أو "
                         "استخدام اسم مختلف.")
