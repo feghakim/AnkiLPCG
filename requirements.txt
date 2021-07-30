@@ -5,10 +5,9 @@ yapf>=0.30.0,<1.0
 mypy>=0.770,<1.0
 pip>=20.1
 
-pyqt5==5.15
-anki==2.1.26
-ankirspy==2.1.26
-aqt==2.1.26
+pyqt5==5.15.2
+anki==2.1.45
+aqt==2.1.45
 
 sphinx==1.8.5
 sphinx_rtd_theme==0.5.0
