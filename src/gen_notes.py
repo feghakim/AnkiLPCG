@@ -3,10 +3,16 @@ import re
 import math
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, TYPE_CHECKING
 from enum import Enum, auto
-from collections import deque
+import sys
+import json
 
 if TYPE_CHECKING:
     from anki.notes import Note
+
+TESTING = True
+if 'pytest' not in sys.modules:
+    TESTING = False
+    from aqt import mw
 
 
 class PoemLine:
@@ -14,6 +20,7 @@ class PoemLine:
         self.predecessor = self  # so it's the right type...
         self.successor: Optional['PoemLine'] = None
         self.seq = -1
+        self.start_index = -1
         self.subtitle = ''
 
     def populate_note(self, note: 'Note', title: str, tags: List[str],
@@ -30,7 +37,7 @@ class PoemLine:
         note['السياق'] = self._format_context(context_lines)
         note['الأبيات'] = self._format_text(recite_lines)
         note['وسائط'] = self._format_media(media)
-        note['كامل المنظومة'] = self._format_whole_poem()
+        note['الحالي'] = str(self.start_index)
         prompt = self._get_prompt(recite_lines)
         if prompt is not None:
             note['محث'] = prompt
@@ -82,43 +89,6 @@ class PoemLine:
         """
         raise NotImplementedError
 
-    def _format_whole_poem(self) -> str:
-
-        def format_current_line(text):
-            return f'<p id="current">{text}</p>'
-
-        def format_line(text):
-            return f'<p>{text}</p>'
-
-        lines = deque()
-        def add_line(poemline, funcname='append', current=False):
-            if hasattr(poemline, 'text'):
-                if current:
-                    getattr(lines, funcname)(format_current_line(poemline.text))
-                else:
-                    getattr(lines, funcname)(format_line(poemline.text))
-            else:
-                group_lines = []
-                if current:
-                    group_lines.append(format_current_line(poemline.text_lines[0]))
-                else:
-                    group_lines.append(format_line(poemline.text_lines[0]))
-                for line in poemline.text_lines[1:]:
-                    group_lines.append(format_line(line))
-                getattr(lines, funcname)('\n'.join(group_lines))
-
-        add_line(self, 'appendleft', current=True)
-        cur = self.predecessor
-        while not isinstance(cur, Beginning):
-            add_line(cur, 'appendleft')
-            cur = cur.predecessor
-        cur = self.successor
-        while cur is not None:
-            add_line(cur)
-            cur = cur.successor
-
-        return '\n'.join(lines)
-
 
 class Beginning(PoemLine):
     """
@@ -129,6 +99,7 @@ class Beginning(PoemLine):
     def __init__(self, text):
         super().__init__()
         self.seq = 0
+        self.start_index = 0
         self.text = text
 
     def _get_context(self, _lines: int, _recursing=False) -> List[str]:
@@ -160,6 +131,7 @@ class SingleLine(PoemLine):
         self.text = text
         self.predecessor = predecessor
         self.seq = self.predecessor.seq + 1
+        self.start_index = self.predecessor.start_index + 1
         self.subtitle = subtitle
 
     def _get_context(self, lines: int, recursing=False) -> List[str]:
@@ -209,6 +181,7 @@ class GroupedLine(PoemLine):
         self.text_lines = text
         self.predecessor = predecessor
         self.seq = self.predecessor.seq + 1
+        self.start_index = self.predecessor.start_index + len(getattr(self.predecessor, 'text_lines', ['']))
         self.subtitle = subtitle
 
     def _get_context(self, lines: int, recursing=False) -> List[str]:
@@ -277,6 +250,33 @@ def groups_of_n(iterable: Iterable, n: int) -> Iterable:
     Credit: https://stackoverflow.com/questions/5389507/iterating-over-every-two-elements-in-a-list
     """
     return zip_longest(*[iter(iterable)]*n)
+
+
+def save_whole_poem(poemlines, title) -> None:
+    current = 1
+    def format_line(text):
+        nonlocal current
+        s = f'<p id="arlpcg-text-{current}">{text}</p>'
+        current += 1
+        return s
+
+    lines = []
+    def add_line(poemline):
+        if hasattr(poemline, 'text'):
+            lines.append(format_line(poemline.text))
+        else:
+            lines.extend(map(lambda l: format_line(l), poemline.text_lines))
+
+    for poemline in poemlines:
+        add_line(poemline)
+
+    # save whole poem to media folder
+    if not TESTING:
+        poem = ''.join(lines)
+        js = f"var ARLPCGText = {json.dumps(poem, ensure_ascii=False)};"
+        fname = f"_{title}.js"
+        mw.col.media.trash_files([fname])
+        mw.col.media.write_data(fname, js.encode())
 
 
 def _poemlines_from_textlines(config: Dict[str, Any], text_lines: List[str], group_lines: int) -> List[PoemLine]:
@@ -461,27 +461,35 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
     added = 0
     model = col.models.by_name("ARLPCG 1.0")
     if mode == ImportMode.CUSTOM:
-        for line in _poemlines_from_textlines(config, text, group_lines)[0::step]:
+        lines = _poemlines_from_textlines(config, text, group_lines)[0::step]
+        for line in lines:
             n = note_constructor(col, model)
             line.populate_note(n, title, tags, context_lines, recite_lines, deck_id, step, choose_media(added, recite_lines, step))
             col.addNote(n)
             added += 1
     elif mode == ImportMode.AUTOMATIC:
         parsed = automatic_parse_text(text, caesura)
-        for line in _poemlines_from_textlines_automatic(config, parsed, group_lines)[0::step]:
+        title = parsed['title']
+        lines = _poemlines_from_textlines_automatic(config, parsed, group_lines)[0::step]
+        for line in lines:
             n = note_constructor(col, model)
-            line.populate_note(n, parsed['title'], tags, context_lines, recite_lines, deck_id, step, choose_media(added, recite_lines, step))
+            line.populate_note(n, title, tags, context_lines, recite_lines, deck_id, step, choose_media(added, recite_lines, step))
             col.addNote(n)
             added += 1
     elif mode == ImportMode.BY_SECTION:
         parsed = automatic_parse_text(text, caesura)
+        title = parsed['title']
         media_added = 0
-        for section_lines, line in _poemlines_from_textlines_by_section(config, parsed):
+        lines = _poemlines_from_textlines_by_section(config, parsed)
+        for section_lines, line in lines:
             n = note_constructor(col, model)
             note_media = choose_media(media_added, section_lines)
             media_added += len(note_media)
-            line.populate_note(n, parsed['title'], tags, 0, section_lines, deck_id, 1, note_media)
+            line.populate_note(n, title, tags, 0, section_lines, deck_id, 1, note_media)
             col.addNote(n)
             added += 1
+        lines = map(lambda l: l[1], lines)
+
+    save_whole_poem(lines, title)
 
     return added

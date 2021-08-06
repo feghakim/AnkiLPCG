@@ -1,0 +1,43 @@
+<div class="title">{{العنوان}} {{الرقم}}</div>
+<div class="title">{{الباب}}</div>
+<div class="lines alert">{{السياق}}</div>
+<div class="cloze alert">{{الأبيات}}</div>
+<div class="alert lines">
+    <a class="text" href="#" onclick="counter()">التكرار:</a><a id="clicks">0</a>
+</div>
+{{#إضافي}}
+<div class="extra">{{إضافي}}</div>
+{{/إضافي}}
+<div>{{وسائط}}</div>
+
+<div class="alert extra">
+    <div id="hintlink" style="display:none"></div>
+    <a href="#" id="show-all">كامل المتن</a>
+    <br>
+</div>
+
+<script>
+    (function () {
+        let hintLink = document.getElementById('hintlink');
+        let showAllLink = document.getElementById('show-all');
+        showAllLink.addEventListener('click', (e) => {
+            showAllLink.style.display = 'none';
+            if(typeof ARLPCGText !== 'undefined') {
+                hintLink.innerHTML = ARLPCGText;
+            }
+            hintLink.style.display = 'block';
+            document.getElementById('arlpcg-text-{{الحالي}}').scrollIntoView({behavior: "smooth", inline: "start"});
+            e.preventDefault();
+        });
+    })();
+</script>
+
+<script src="_{{العنوان}}.js"></script>
+
+<script>
+    var clicks = 0;
+    function counter() {
+        clicks += 1;
+        document.getElementById("clicks").innerHTML = clicks;
+    };
+</script>

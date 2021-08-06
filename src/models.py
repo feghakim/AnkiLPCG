@@ -24,6 +24,7 @@ two versions and create a standardized system!
 from abc import ABC
 from textwrap import dedent
 from typing import Callable, Dict, Tuple, Type
+import os
 
 import aqt
 from aqt.utils import askUser, showInfo
@@ -105,7 +106,7 @@ class ModelData(ABC):
         at_version = current_version
         for cur_ver, new_ver, func in cls.upgrades:
             if at_version == cur_ver:
-                func(model)
+                func(model, cls)
                 at_version = new_ver
         if at_version != current_version:
             aqt.mw.col.models.save(model)
@@ -140,7 +141,7 @@ class ModelData(ABC):
         return current_version == cls.version
 
 
-def upgrade_oneohoh_to_oneoneoh(mod):
+def upgrade_oneohoh_to_oneoneoh(mod, model_data: ModelData):
     "Upgrade ARLPCG model from 1.0.0 to version 1.1.0."
     mm = aqt.mw.col.models
     mm.add_field(mod, mm.new_field('كامل المنظومة'))
@@ -168,133 +169,37 @@ def upgrade_oneohoh_to_oneoneoh(mod):
     </script>
     ''').strip()
 
+def upgrade_oneoneoh_to_onetwooh(mod, model_data: ModelData):
+    "Store poem texts in the media folder instead of duplicating them in every note, and add repetition counter"
+    mm = aqt.mw.col.models
+    if 'كامل المنظومة' in mm.field_map(mod):
+        mm.remove_field(mod, mm.field_map(mod)['كامل المنظومة'][1])
+    mm.add_field(mod, mm.new_field("الحالي"))
+
+    mod['tmpls'][0]['qfmt'] = dedent(model_data.templates[0].front)
+    mod['tmpls'][0]['afmt'] = dedent(model_data.templates[0].back)
+    mod['css'] = dedent(model_data.styling)
+
+
+SRCDIR = os.path.dirname(os.path.realpath(__file__))
 
 class LpcgOne(ModelData):
     class LpcgOneTemplate(TemplateData):
         name = "ARLPCG1"
-        front = """
-            <div class="title">{{العنوان}}: {{الرقم}}</div>
-            <div class="title">{{الباب}}</div>
-            <div class="lines  alert">{{السياق}}</div>
-            <div class="cloze alert">
-                {{#محث}}{{محث}}{{/محث}}
-                {{^محث}}[...]{{/محث}}
-            </div>
-        """
-        back = """
-            <div class="title">{{العنوان}} {{الرقم}}</div>
-            <div class="title">{{الباب}}</div>
-            <div class="lines alert">{{السياق}}</div>
-            <div class="cloze alert">{{الأبيات}}</div>
-            {{#إضافي}}
-                <div class="extra">{{إضافي}}</div>
-            {{/إضافي}}
-            <div>{{وسائط}}</div>
-            <div class="alert extra">
-                {{#كامل المنظومة}}
-                    <div id="hintlink" style="display:none">{{كامل المنظومة}}</div>
-                    <a href="#" id="show-all">كامل المنظومة</a>
-                    <br>
-                {{/كامل المنظومة}}
-             </div>
-
-            <script>
-                (function () {
-                    let hintLink = document.getElementById('hintlink');
-                    let showAllLink = document.getElementById('show-all');
-                    showAllLink.addEventListener('click', (e) => {
-                        showAllLink.style.display = 'none';
-                        hintLink.style.display = 'block';
-                        document.getElementById('current').scrollIntoView({behavior: "smooth", inline: "start"});
-                        e.preventDefault();
-                    });
-                })();
-            </script>
-        """
+        front = open(os.path.join(SRCDIR, 'upgrades/1.2.0/front.txt'), encoding='utf-8').read()
+        back = open(os.path.join(SRCDIR, 'upgrades/1.2.0/back.txt'), encoding='utf-8').read()
 
     name = "ARLPCG 1.0"
-    fields = ("الأبيات", "السياق", "العنوان", "الباب", "الرقم", "محث", "وسائط", "إضافي", "كامل المنظومة")
+    fields = ("الأبيات", "السياق", "العنوان", "الباب", "الرقم", "محث", "وسائط", "إضافي", "الحالي")
     templates = (LpcgOneTemplate,)
-    styling = """
-        .card {
-            font-family: MyFont, sans-serif;
-            font-size: 23px; /*هذا الرقم خاص بتغيير حجم الخط*/
-            max-width: 620px;
-            background-color: #fffff9;
-            direction: rtl;
-            margin: 5px auto;
-            text-align: center; /*لتوسيط النصوص غير الكلمة بعد النقطتين إلى justify*/
-            padding: 0 5px;
-            line-height: 1.8em;
-        }
-
-        .card.nightMode {
-            background: #555;
-            color:#eee;
-        }
-
-        .alert {
-            position: relative;
-            padding: 15px;
-            margin-bottom:5px;
-            border-radius: .25rem;
-        }
-
-        .lines, .extra {
-            color: #004085;
-            background: #cce5ff;
-        }
-
-        .nightMode .lines, .nightMode .extra {
-            background: #476d7c;
-            color: #fff;
-        }
-
-        .cloze {
-            color: #155724;
-            background: #d4edda;
-        }
-
-        .nightMode .cloze {
-            background: #254b62;
-            color: #fff;
-        }
-
-        .title {
-            font-size: 18px;
-            margin: 2px auto 10px;
-            background: #ddd;
-            width: max-content;
-            padding: 0 8%;
-            border-radius: .25rem;
-        }
-
-        .nightMode .title {
-            background: #414141;
-            color: #fff;
-        }
-
-        @font-face {
-            font-family: MyFont;
-            font-weight: 500;
-            src: url('_Sh_LoutsSh.ttf');
-        }
-
-        @font-face {
-            font-family: MyFont;
-            font-weight: 700;
-            src: url('_Sh_LoutsShB.ttf');
-        }
-        /*Start of style added by resize image add-on. Don't edit directly or the edition will be lost. Edit via the add-on configuration */
-        .mobile .card img {height:unset  !important; width:unset  !important;}
-        /*End of style added by resize image add-on*/
-    """
+    styling = open(os.path.join(SRCDIR, 'upgrades/1.2.0/styling.txt'), encoding='utf-8').read()
     sort_field = "الرقم"
     is_cloze = False
-    version = "1.1.0"
+    version = "1.2.0"
     upgrades = (
-        ("none", "1.0.0", lambda m: None),
+        ("none", "1.0.0", lambda m, md: None),
         ("1.0.0", "1.1.0", upgrade_oneohoh_to_oneoneoh),
+        ("1.1.0", "1.2.0", upgrade_oneoneoh_to_onetwooh),
     )
 
 

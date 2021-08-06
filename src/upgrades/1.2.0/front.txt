@@ -1,0 +1,7 @@
+<div class="title">{{العنوان}}: {{الرقم}}</div>
+<div class="title">{{الباب}}</div>
+<div class="lines  alert">{{السياق}}</div>
+<div class="cloze alert">
+    {{#محث}}{{محث}}{{/محث}}
+    {{^محث}}[...]{{/محث}}
+</div>
