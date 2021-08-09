@@ -44,7 +44,7 @@ class TemplateData(ABC):
         "Create and return an Anki template object for this model definition."
         assert aqt.mw is not None, "Tried to use models before Anki is initialized!"
         mm = aqt.mw.col.models
-        t = mm.new(cls.name)
+        t = mm.newTemplate(cls.name)
         t['qfmt'] = dedent(cls.front).strip()
         t['afmt'] = dedent(cls.back).strip()
         return t
@@ -73,9 +73,9 @@ class ModelData(ABC):
         mm = aqt.mw.col.models
         model = mm.new(cls.name)
         for i in cls.fields:
-            field = mm.new_field(i)
+            field = mm.newField(i)
             field["rtl"] = True
-            mm.add_field(model, field)
+            mm.addField(model, field)
         for template in cls.templates:
             t = template.to_template()
             mm.addTemplate(model, t)
@@ -101,7 +101,7 @@ class ModelData(ABC):
         Returns the new version the model is at.
         """
         assert aqt.mw is not None, "Tried to use models before Anki is initialized!"
-        model = aqt.mw.col.models.by_name(cls.name)
+        model = aqt.mw.col.models.byName(cls.name)
 
         at_version = current_version
         for cur_ver, new_ver, func in cls.upgrades:
@@ -120,7 +120,7 @@ class ModelData(ABC):
         """
         assert aqt.mw is not None, "Tried to use models before Anki is initialized!"
         mm = aqt.mw.col.models
-        model = mm.by_name(cls.name)
+        model = mm.byName(cls.name)
         return model is not None
 
     @classmethod
@@ -144,7 +144,7 @@ class ModelData(ABC):
 def upgrade_oneohoh_to_oneoneoh(mod, model_data: ModelData):
     "Upgrade ARLPCG model from 1.0.0 to version 1.1.0."
     mm = aqt.mw.col.models
-    mm.add_field(mod, mm.new_field('كامل المنظومة'))
+    mm.addField(mod, mm.newField('كامل المنظومة'))
 
     mod['tmpls'][0]['afmt'] += dedent('''
     <div class="alert extra">
@@ -173,8 +173,8 @@ def upgrade_oneoneoh_to_onetwooh(mod, model_data: ModelData):
     "Store poem texts in the media folder instead of duplicating them in every note, and add repetition counter."
     mm = aqt.mw.col.models
     if 'كامل المنظومة' in mm.field_map(mod):
-        mm.remove_field(mod, mm.field_map(mod)['كامل المنظومة'][1])
-    mm.add_field(mod, mm.new_field("الحالي"))
+        mm.removeField(mod, mm.field_map(mod)['كامل المنظومة'][1])
+    mm.addField(mod, mm.newField("الحالي"))
 
     mod['tmpls'][0]['qfmt'] = dedent(model_data.templates[0].front)
     mod['tmpls'][0]['afmt'] = dedent(model_data.templates[0].back)
@@ -184,7 +184,7 @@ def upgrade_onetwooh_onethreeoh(mod, model_data: ModelData):
     """Add a special field to store a reference the the poem text file
     as a hack so that Anki recognizes it as used and exports it with its deck."""
     mm = aqt.mw.col.models
-    mm.add_field(mod, mm.new_field("خاص (لا تعدل)"))
+    mm.addField(mod, mm.newField("خاص (لا تعدل)"))
 
 
 SRCDIR = os.path.dirname(os.path.realpath(__file__))

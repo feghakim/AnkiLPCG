@@ -127,7 +127,7 @@ class MockModel:
     def __call__(self):
         return self.properties
 
-    def by_name(self, name):
+    def byName(self, name):
         return self
 
 
@@ -144,9 +144,9 @@ class MockCollection:
 
 
 class MockNote:
-    def __init__(self, collection, ntype):
+    def __init__(self, collection, model):
         self.collection = collection
-        self.note_type = ntype
+        self.model = model
         self.tags = []
         self.properties = {}
 
