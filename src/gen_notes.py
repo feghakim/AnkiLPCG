@@ -38,6 +38,7 @@ class PoemLine:
         note['الأبيات'] = self._format_text(recite_lines)
         note['وسائط'] = self._format_media(media)
         note['الحالي'] = str(self.start_index)
+        note['خاص (لا تعدل)'] = f'<img src="_{title}.js">'
         prompt = self._get_prompt(recite_lines)
         if prompt is not None:
             note['محث'] = prompt

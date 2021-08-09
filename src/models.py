@@ -170,7 +170,7 @@ def upgrade_oneohoh_to_oneoneoh(mod, model_data: ModelData):
     ''').strip()
 
 def upgrade_oneoneoh_to_onetwooh(mod, model_data: ModelData):
-    "Store poem texts in the media folder instead of duplicating them in every note, and add repetition counter"
+    "Store poem texts in the media folder instead of duplicating them in every note, and add repetition counter."
     mm = aqt.mw.col.models
     if 'كامل المنظومة' in mm.field_map(mod):
         mm.remove_field(mod, mm.field_map(mod)['كامل المنظومة'][1])
@@ -179,6 +179,12 @@ def upgrade_oneoneoh_to_onetwooh(mod, model_data: ModelData):
     mod['tmpls'][0]['qfmt'] = dedent(model_data.templates[0].front)
     mod['tmpls'][0]['afmt'] = dedent(model_data.templates[0].back)
     mod['css'] = dedent(model_data.styling)
+
+def upgrade_onetwooh_onethreeoh(mod, model_data: ModelData):
+    """Add a special field to store a reference the the poem text file
+    as a hack so that Anki recognizes it as used and exports it with its deck."""
+    mm = aqt.mw.col.models
+    mm.add_field(mod, mm.new_field("خاص (لا تعدل)"))
 
 
 SRCDIR = os.path.dirname(os.path.realpath(__file__))
@@ -190,16 +196,17 @@ class LpcgOne(ModelData):
         back = open(os.path.join(SRCDIR, 'upgrades/1.2.0/back.txt'), encoding='utf-8').read()
 
     name = "ARLPCG 1.0"
-    fields = ("الأبيات", "السياق", "العنوان", "الباب", "الرقم", "محث", "وسائط", "إضافي", "الحالي")
+    fields = ("الأبيات", "السياق", "العنوان", "الباب", "الرقم", "محث", "وسائط", "إضافي", "الحالي", "خاص (لا تعدل)")
     templates = (LpcgOneTemplate,)
     styling = open(os.path.join(SRCDIR, 'upgrades/1.2.0/styling.txt'), encoding='utf-8').read()
     sort_field = "الرقم"
     is_cloze = False
-    version = "1.2.0"
+    version = "1.3.0"
     upgrades = (
         ("none", "1.0.0", lambda m, md: None),
         ("1.0.0", "1.1.0", upgrade_oneohoh_to_oneoneoh),
         ("1.1.0", "1.2.0", upgrade_oneoneoh_to_onetwooh),
+        ("1.2.0", "1.3.0", upgrade_onetwooh_onethreeoh),
     )
 
 
