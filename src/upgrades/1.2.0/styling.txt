@@ -51,7 +51,6 @@
     font-size: 18px;
     margin: 2px auto 10px;
     background: #ddd;
-    width: max-content;
     padding: 0 8%;
     border-radius: .25rem;
 }
