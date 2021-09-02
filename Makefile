@@ -16,7 +16,7 @@ build.zip: src/*
 	( cd src/; zip -r ../$@ * )
 
 addon: zip
-	cp build.zip arlpcg.ankiaddon
+	cp build.zip arlpcg.2.1.26-2.1.44.ankiaddon
 
 clean:
 	make -C docs clean
