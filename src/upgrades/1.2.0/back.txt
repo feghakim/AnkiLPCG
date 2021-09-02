@@ -3,7 +3,7 @@
 <div class="lines alert">{{السياق}}</div>
 <div class="cloze alert">{{الأبيات}}</div>
 <div class="alert lines">
-    <a class="text" href="#" onclick="counter()">التكرار:</a><a id="clicks">0</a>
+    <a class="text" href="#" onclick="counter(); return false;">التكرار:</a><a id="clicks">0</a>
 </div>
 {{#إضافي}}
 <div class="extra">{{إضافي}}</div>

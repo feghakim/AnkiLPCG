@@ -192,13 +192,16 @@ SRCDIR = os.path.dirname(os.path.realpath(__file__))
 class LpcgOne(ModelData):
     class LpcgOneTemplate(TemplateData):
         name = "ARLPCG1"
-        front = open(os.path.join(SRCDIR, 'upgrades/1.2.0/front.txt'), encoding='utf-8').read()
-        back = open(os.path.join(SRCDIR, 'upgrades/1.2.0/back.txt'), encoding='utf-8').read()
+        with open(os.path.join(SRCDIR, 'upgrades/1.2.0/front.txt'), encoding='utf-8') as f:
+            front = f.read()
+        with open(os.path.join(SRCDIR, 'upgrades/1.2.0/back.txt'), encoding='utf-8') as f:
+            back = f.read()
 
     name = "ARLPCG 1.0"
     fields = ("الأبيات", "السياق", "العنوان", "الباب", "الرقم", "محث", "وسائط", "إضافي", "الحالي", "خاص (لا تعدل)")
     templates = (LpcgOneTemplate,)
-    styling = open(os.path.join(SRCDIR, 'upgrades/1.2.0/styling.txt'), encoding='utf-8').read()
+    with open(os.path.join(SRCDIR, 'upgrades/1.2.0/styling.txt'), encoding='utf-8') as f:
+        styling = f.read()
     sort_field = "الرقم"
     is_cloze = False
     version = "1.3.0"
