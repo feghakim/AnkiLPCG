@@ -172,8 +172,8 @@ def upgrade_oneohoh_to_oneoneoh(mod, model_data: ModelData):
 def upgrade_oneoneoh_to_onetwooh(mod, model_data: ModelData):
     "Store poem texts in the media folder instead of duplicating them in every note, and add repetition counter."
     mm = aqt.mw.col.models
-    if 'كامل المنظومة' in mm.field_map(mod):
-        mm.removeField(mod, mm.field_map(mod)['كامل المنظومة'][1])
+    if 'كامل المنظومة' in mm.fieldMap(mod):
+        mm.removeField(mod, mm.fieldMap(mod)['كامل المنظومة'][1])
     mm.addField(mod, mm.newField("الحالي"))
 
     mod['tmpls'][0]['qfmt'] = dedent(model_data.templates[0].front)
