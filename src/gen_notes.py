@@ -65,7 +65,10 @@ class PoemLine:
         return ''.join("<p>%s</p>" % i for i in self._get_context(context_lines))
 
     def _format_text(self, recitation_lines: int):
-        return ''.join("<p>%s</p>" % i for i in self._get_text(recitation_lines))
+        return '<table>' + \
+                ''.join('<tr><td dir="rtl">%s</td></tr><tr><td dir="ltr">%s</td></tr>' \
+                % tuple(i.split('**')) for i in self._get_text(recitation_lines)) \
+                + '</table>'
 
     def _get_context(self, _lines: int, _recursing=False) -> List[str]:
         """
