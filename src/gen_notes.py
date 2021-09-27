@@ -25,7 +25,7 @@ class PoemLine:
 
     def populate_note(self, note: 'Note', title: str, tags: List[str],
                       context_lines: int, recite_lines: int, deck_id: int,
-                      step: int = 1, media: List[str] = []) -> None:
+                      step: int = 1, media: List[str] = [], caesura: str = '**') -> None:
         """
         Fill the _note_ with content testing on the current line.
         """
@@ -35,7 +35,7 @@ class PoemLine:
         note['الباب'] = self._format_subtitles(context_lines)
         note['الرقم'] = str(math.ceil(self.seq/step))
         note['السياق'] = self._format_context(context_lines)
-        note['الأبيات'] = self._format_text(recite_lines)
+        note['الأبيات'] = self._format_text(recite_lines, caesura)
         note['وسائط'] = self._format_media(media)
         note['الحالي'] = str(self.start_index)
         note['خاص (لا تعدل)'] = f'<img src="_{title}.js">'
@@ -64,10 +64,10 @@ class PoemLine:
     def _format_context(self, context_lines: int):
         return ''.join("<p>%s</p>" % i for i in self._get_context(context_lines))
 
-    def _format_text(self, recitation_lines: int):
-    return '<table width=100%>' + \
+    def _format_text(self, recitation_lines: int, caesura: str):
+        return '<table width=100%>' + \
             ''.join('<tr><td align="right">%s</td></tr><tr><td align="left">%s</td></tr>' \
-                % tuple(i.split('**')) for i in self._get_text(recitation_lines)) \
+                % tuple(i.split(caesura)) for i in self._get_text(recitation_lines)) \
                 + '</table>'
 
     def _get_context(self, _lines: int, _recursing=False) -> List[str]:
@@ -120,7 +120,7 @@ class Beginning(PoemLine):
 
     def populate_note(self, note: 'Note', title: str, tags: List[str],
                       context_lines: int, recite_lines: int, deck_id: int,
-                      step: int = 1, media: List[str] = []) -> None:
+                      step: int = 1, media: List[str] = [], caesura: str = '**') -> None:
         raise AssertionError("The Beginning node cannot be used to populate a note.")
 
 
@@ -433,7 +433,7 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
               title: str, tags: List[str], text: List[str], deck_id: int,
               context_lines: int, group_lines: int, recite_lines: int, step: int = 1,
               media: List[str] = [], media_mode: MediaImportMode = MediaImportMode.BULK,
-              mode: ImportMode = ImportMode.CUSTOM, caesura: str = ' '):
+              mode: ImportMode = ImportMode.CUSTOM, caesura: str = '**'):
     """
     Generate notes from the given title, tags, poem text, and number of
     lines of context. Return the number of notes added.
@@ -468,7 +468,7 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
         lines = _poemlines_from_textlines(config, text, group_lines)[0::step]
         for line in lines:
             n = note_constructor(col, model)
-            line.populate_note(n, title, tags, context_lines, recite_lines, deck_id, step, choose_media(added, recite_lines, step))
+            line.populate_note(n, title, tags, context_lines, recite_lines, deck_id, step, choose_media(added, recite_lines, step), caesura)
             col.addNote(n)
             added += 1
     elif mode == ImportMode.AUTOMATIC:
@@ -477,7 +477,7 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
         lines = _poemlines_from_textlines_automatic(config, parsed, group_lines)[0::step]
         for line in lines:
             n = note_constructor(col, model)
-            line.populate_note(n, title, tags, context_lines, recite_lines, deck_id, step, choose_media(added, recite_lines, step))
+            line.populate_note(n, title, tags, context_lines, recite_lines, deck_id, step, choose_media(added, recite_lines, step), caesura)
             col.addNote(n)
             added += 1
     elif mode == ImportMode.BY_SECTION:
@@ -489,7 +489,7 @@ def add_notes(col: Any, config: Dict[str, Any], note_constructor: Callable,
             n = note_constructor(col, model)
             note_media = choose_media(media_added, section_lines)
             media_added += len(note_media)
-            line.populate_note(n, title, tags, 0, section_lines, deck_id, 1, note_media)
+            line.populate_note(n, title, tags, 0, section_lines, deck_id, 1, note_media, caesura)
             col.addNote(n)
             added += 1
         lines = map(lambda l: l[1], lines)
