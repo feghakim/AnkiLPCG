@@ -65,8 +65,8 @@ class PoemLine:
         return ''.join("<p>%s</p>" % i for i in self._get_context(context_lines))
 
     def _format_text(self, recitation_lines: int):
-        return '<table>' + \
-                ''.join('<tr><td dir="rtl">%s</td></tr><tr><td dir="ltr">%s</td></tr>' \
+    return '<table width=100%>' + \
+            ''.join('<tr><td align="right">%s</td></tr><tr><td align="left">%s</td></tr>' \
                 % tuple(i.split('**')) for i in self._get_text(recitation_lines)) \
                 + '</table>'
 
